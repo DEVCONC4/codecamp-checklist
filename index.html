@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barangay AI Code Camp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- ── auth gate ─────────────────────────────────────────────── -->
+<div class="gate" id="gate" hidden>
+  <div class="card">
+    <span class="eyebrow" id="gateCode">Codecamp</span>
+    <h2 id="gateTitle">Sign in to the camp</h2>
+    <p id="gateLede">Your progress, answers and screenshots are saved to your account, so you can pick up on any machine in the room.</p>
+    <p class="nomail">No email address needed — pick a username and remember it.</p>
+
+    <div class="field" id="fName" hidden>
+      <label for="pName">Full name</label>
+      <input id="pName" autocomplete="name" placeholder="Juan dela Cruz">
+    </div>
+    <div class="field">
+      <label for="pUser">Username</label>
+      <input id="pUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="juandelacruz">
+      <div class="hint" id="userHint">Letters, numbers, dots, dashes and underscores. No email needed.</div>
+    </div>
+    <div class="field">
+      <label for="pPass">Password</label>
+      <input id="pPass" type="password" autocomplete="current-password" placeholder="At least 8 characters">
+    </div>
+    <div class="field" id="fOS" hidden>
+      <label for="pOS">Operating system</label>
+      <select id="pOS"><option>Windows</option><option>macOS</option><option>Linux</option></select>
+      <div class="hint">Half the commands today differ between PowerShell and bash.</div>
+    </div>
+
+    <p class="authmsg" id="authMsg" hidden></p>
+    <button class="btn btn-primary" id="authBtn" style="width:100%">Sign in</button>
+    <p class="swap">
+      <span id="swapText">New to the camp?</span>
+      <button class="linkbtn" id="swapBtn">Create an account</button>
+    </p>
+  </div>
+</div>
+
+<!-- ── app ───────────────────────────────────────────────────── -->
+<div id="app" hidden>
+  <header class="masthead">
+    <div class="masthead-in">
+      <div class="brand">
+        <h1 id="campTitle">Codecamp</h1>
+        <span class="code" id="campCode">—</span>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-view="steps" aria-selected="true">Steps</button>
+        <button class="tab" role="tab" data-view="record">My project</button>
+        <button class="tab" role="tab" data-view="desk" id="deskTab" hidden>Facilitator</button>
+      </nav>
+      <div class="who">
+        <div class="avatar" id="pInitials">—</div>
+        <div>
+          <small id="pOSOut">—</small>
+          <strong id="pNameOut">—</strong>
+        </div>
+      </div>
+    </div>
+    <div class="rail"><i id="railFill"></i></div>
+  </header>
+
+  <div class="wrap">
+    <section class="view" id="view-steps">
+      <div class="cols">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main id="stepPane"></main>
+      </div>
+    </section>
+
+    <section class="view" id="view-record" hidden>
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Proof of completion</span>
+          <h2>My project</h2>
+        </div>
+        <p>Everything you've submitted so far. Finish all the required steps and it becomes a project write-up you can share.</p>
+      </div>
+      <div id="unlockOut"></div>
+      <div id="recordOut"></div>
+    </section>
+
+    <section class="view" id="view-desk" hidden>
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Facilitator only</span>
+          <h2>The room</h2>
+        </div>
+        <p>Live from the database — every participant, updated as they stamp. No files to collect.</p>
+        <div class="tools">
+          <button class="btn btn-ghost btn-sm" id="refreshRoom">Refresh</button>
+          <button class="btn btn-primary btn-sm" id="xlsxBtn">Export to Excel</button>
+        </div>
+      </div>
+      <div id="roomOut"></div>
+    </section>
+
+    <div class="footbar">
+      <span id="savePill" class="savepill">Ready</span>
+      <span class="sp"></span>
+      <button class="btn btn-ghost btn-sm" id="signOutBtn">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
