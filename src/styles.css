@@ -58,6 +58,11 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .nomail{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--stamp);background:var(--stamp-tint);border-radius:3px;padding:7px 10px;margin:0 0 22px !important}
 .authmsg{background:var(--flag-tint);color:var(--flag);border-radius:4px;padding:10px 13px;font-size:14.5px;margin:0 0 16px}
 .authmsg.good{background:var(--stamp-tint);color:var(--stamp)}
+/* Project is misconfigured — aimed at whoever is running the room, not the
+   participant, so it sits above the form and outlives any attempt message. */
+.gatewarn{border-left:3px solid var(--flag);background:var(--flag-tint);color:var(--flag);border-radius:0 4px 4px 0;padding:11px 14px;font-size:14.5px;margin:0 0 20px}
+.gatewarn strong{font-weight:600}
+.gatewarn code{font-family:var(--mono);font-size:12.5px;background:var(--paper);padding:2px 5px;border-radius:3px}
 .swap{margin:16px 0 0;text-align:center;font-size:14.5px;color:var(--ink-soft)}
 .linkbtn{background:none;border:0;padding:0;cursor:pointer;color:var(--stamp);font-weight:600;text-decoration:underline;font-family:var(--body);font-size:14.5px}
 

@@ -41,7 +41,12 @@ its Refresh button, showing "Manual refresh" instead of "Live". It doesn't widen
 what anyone can read: a realtime event is only a nudge to refetch through
 PostgREST, where RLS still decides what comes back.
 
-Using the CLI instead? `supabase db push` picks all three up in order.
+Using the CLI instead? `supabase db push` picks them all up in order.
+
+[`0004_confirm_camp_users.sql`](supabase/migrations/0004_confirm_camp_users.sql)
+is a repair, not a step: run it only if accounts were created before you turned
+email confirmation off in step 4. It matches nothing on a correctly configured
+project.
 
 > **If the storage policies error out**, your project restricts `storage.objects`
 > to the dashboard. Skip that block and recreate the three policies under
@@ -276,6 +281,11 @@ operations, **the app wins** — this is a companion to it, not a replacement.
    on small terminal text. Raise it in `shrink()` if legibility complaints appear.
 4. **Realtime needs `0002`.** Without that migration the desk shows "Manual
    refresh" and updates only when you press the button.
-5. **Email confirmation.** If your project has it enabled, sign-up returns no
-   session and the app tells people to check their mail. For a camp, turn it off
-   under **Authentication → Providers → Email** so people get straight in.
+5. **Email confirmation.** Leave it on and signups fail with a rate-limit error
+   — `429 over_email_send_rate_limit`, shown as *"Too many attempts just now"* —
+   after roughly the second account, because Supabase is trying to mail every
+   undeliverable `.test` address through a shared SMTP capped at a couple of
+   sends an hour. Waiting never clears it; the gate says so and names the
+   setting. Turn it off under **Authentication → Sign In / Providers → Email**,
+   then run `0004_confirm_camp_users.sql` for the accounts already stranded.
+   The app checks `/auth/v1/settings` at boot and warns before anyone tries.

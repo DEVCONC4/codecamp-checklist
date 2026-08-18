@@ -1,5 +1,5 @@
 import './styles.css';
-import { supabase, configured, bootFailure } from './supabase.js';
+import { supabase, configured, bootFailure, confirmEmailIsOn } from './supabase.js';
 import { CAMP } from './camp.js';
 import { store, loadProfile, loadAll, flush, isFacilitator } from './store.js';
 import { $, $$, toast, pill } from './ui.js';
@@ -72,6 +72,28 @@ function msg(text, good = false) {
   el.classList.toggle('good', good);
 }
 
+// Project-level breakage, addressed to whoever is running the room. Survives
+// setMode and further attempts, because no amount of retrying clears it.
+function warn(html) {
+  const el = $('#gateWarn');
+  el.hidden = !html;
+  el.innerHTML = html;
+}
+
+// Reached three ways — asked for at boot, inferred from a session-less signup,
+// or diagnosed from the 429 — so the instruction is written once.
+function warnConfirmEmail() {
+  warn(
+    'This project still has <strong>Confirm email</strong> switched on, so signing up is broken. ' +
+    'Login is by username: the address behind it ends in <code>.test</code> and can never receive ' +
+    'the confirmation, and the built-in mail server allows only a couple of sends an hour, so most ' +
+    'of the room gets a rate-limit error instead of an account. Waiting will not help. ' +
+    'A facilitator: uncheck it under <strong>Authentication → Sign In / Providers → Email</strong>, ' +
+    'then run <code>supabase/migrations/0004_confirm_camp_users.sql</code> to release the accounts ' +
+    'already made.',
+  );
+}
+
 async function submitAuth() {
   const btn = $('#authBtn');
   const username = $('#pUser').value.trim().toLowerCase();
@@ -97,10 +119,11 @@ async function submitAuth() {
       });
       if (error) throw error;
       // Confirm email must be off for a camp; if someone turns it back on,
-      // signUp returns no session and this explains it instead of looking
-      // like a silent failure.
+      // signUp returns no session, and the confirmation was mailed to an
+      // address that cannot receive it, so nobody can finish on their own.
       if (!data.session) {
-        msg('Account created, but the project is waiting on email confirmation. Ask a facilitator to turn it off.');
+        warnConfirmEmail();
+        msg('Account created, but sign-in is blocked until a facilitator fixes the project setting above.');
         return;
       }
     } else {
@@ -108,7 +131,12 @@ async function submitAuth() {
       if (error) throw error;
     }
   } catch (e) {
-    msg(friendly(e.message));
+    // The mail cap can only be hit if confirmation is on, whatever the boot
+    // check managed to find out.
+    if (e?.code === 'over_email_send_rate_limit' || /email rate limit/i.test(e?.message || '')) {
+      warnConfirmEmail();
+    }
+    msg(friendly(e));
   } finally {
     btn.disabled = false;
     btn.textContent = mode === 'signup' ? 'Create account' : 'Sign in';
@@ -117,12 +145,37 @@ async function submitAuth() {
 
 // Supabase phrases these in terms of the address it stores, which nobody here
 // has ever seen. Translate before showing them.
-function friendly(m = '') {
-  if (/already registered|already exists/i.test(m)) return 'That username is taken — pick another.';
-  if (/invalid login credentials/i.test(m)) return 'No account with that username and password.';
-  if (/email address .* invalid/i.test(m)) return 'That username has characters Supabase will not accept.';
-  if (/rate limit/i.test(m)) return 'Too many attempts just now — wait a moment and try again.';
-  if (/password/i.test(m) && /short|least/i.test(m)) return 'Use at least 8 characters.';
+//
+// Prefer error.code: the two 429s look identical in prose but need opposite
+// advice — a per-IP request cap really does clear if you wait, while the mail
+// cap is a project setting that never will. Older gotrue builds send no code,
+// so the message patterns stay as a fallback.
+const BY_CODE = {
+  user_already_exists: 'That username is taken — pick another.',
+  email_exists: 'That username is taken — pick another.',
+  invalid_credentials: 'No account with that username and password.',
+  email_address_invalid: 'That username has characters Supabase will not accept.',
+  email_not_confirmed:
+    'This account was made while the project still required email confirmation, so it is stuck. ' +
+    'A facilitator can release it — see 0004_confirm_camp_users.sql.',
+  weak_password: 'Use at least 8 characters.',
+  signup_disabled: 'Signups are switched off on this project. Ask a facilitator.',
+  over_email_send_rate_limit:
+    'Signups are blocked by a project setting, not by you — see the note above.',
+  over_request_rate_limit:
+    'Too many attempts from this room just now — wait a minute and try again.',
+};
+
+function friendly(e) {
+  const m = (typeof e === 'string' ? e : e?.message) || '';
+  if (typeof e === 'object' && e?.code && BY_CODE[e.code]) return BY_CODE[e.code];
+  if (/already registered|already exists/i.test(m)) return BY_CODE.user_already_exists;
+  if (/invalid login credentials/i.test(m)) return BY_CODE.invalid_credentials;
+  if (/email address .* invalid/i.test(m)) return BY_CODE.email_address_invalid;
+  if (/not confirmed/i.test(m)) return BY_CODE.email_not_confirmed;
+  if (/email rate limit/i.test(m)) return BY_CODE.over_email_send_rate_limit;
+  if (/rate limit/i.test(m)) return BY_CODE.over_request_rate_limit;
+  if (/password/i.test(m) && /short|least/i.test(m)) return BY_CODE.weak_password;
   return m || 'That did not work.';
 }
 
@@ -133,6 +186,10 @@ async function boot() {
   $('#campTitle').textContent = CAMP.title;
   $('#campCode').textContent = CAMP.code;
   setMode('signin');
+
+  // Ask the project up front rather than letting thirty people discover it one
+  // 429 at a time. Not awaited: a slow settings call must not hold the gate.
+  confirmEmailIsOn().then((on) => { if (on) warnConfirmEmail(); });
 
   $('#authBtn').addEventListener('click', submitAuth);
   $('#swapBtn').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
