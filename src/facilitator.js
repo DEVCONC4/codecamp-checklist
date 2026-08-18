@@ -122,7 +122,7 @@ export function renderRoom() {
 
 export async function exportXlsx() {
   const rosterAoa = [[
-    'Name', 'Username', 'OS', 'GitHub', 'AI name', 'Model', 'Language', 'Live URL', 'Repo',
+    'Name', 'Email', 'OS', 'GitHub', 'AI name', 'Model', 'Language', 'Live URL', 'Repo',
     'Steps stamped', 'Steps total', 'Status', 'Completed', 'Pace', 'Hardest hour', 'Feedback',
   ]];
   const subsAoa = [['Participant', 'OS', 'Step #', 'Step', 'Module', 'Field', 'Answer', 'Stamped at']];
@@ -130,7 +130,7 @@ export async function exportXlsx() {
   for (const p of roster) {
     const n = Number(p.steps_done || 0);
     rosterAoa.push([
-      p.name || '', p.username || '', p.os || '',
+      p.name || '', p.email || '', p.os || '',
       field(p.id, 'p3', 'gh'),
       field(p.id, 'h3a', 'ainame'),
       field(p.id, 'p1', 'model'),

@@ -16,7 +16,6 @@
     <span class="eyebrow" id="gateCode">Codecamp</span>
     <h2 id="gateTitle">Sign in to the camp</h2>
     <p id="gateLede">Your progress, answers and screenshots are saved to your account, so you can pick up on any machine in the room.</p>
-    <p class="nomail">No email address needed — pick a username and remember it.</p>
     <div class="gatewarn" id="gateWarn" hidden></div>
 
     <div class="field" id="fName" hidden>
@@ -24,9 +23,9 @@
       <input id="pName" autocomplete="name" placeholder="Juan dela Cruz">
     </div>
     <div class="field">
-      <label for="pUser">Username</label>
-      <input id="pUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="juandelacruz">
-      <div class="hint" id="userHint">Letters, numbers, dots, dashes and underscores. No email needed.</div>
+      <label for="pUser">Email</label>
+      <input id="pUser" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="juan@example.com">
+      <div class="hint" id="userHint">Any address you'll remember. Nothing is ever sent to it.</div>
     </div>
     <div class="field">
       <label for="pPass">Password</label>

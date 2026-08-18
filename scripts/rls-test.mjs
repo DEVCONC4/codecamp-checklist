@@ -3,20 +3,21 @@
 // participant would actually try.
 //
 //   node scripts/rls-test.mjs
-//   node scripts/rls-test.mjs --facilitator yourusername yourpassword
+//   node scripts/rls-test.mjs --facilitator you@example.com yourpassword
 //
-// Requires "Confirm email" to be OFF (Authentication → Sign In / Providers →
-// Email); otherwise signUp returns no session and nothing here can run.
+// Requires the Email provider ON and "Confirm email" OFF (both under
+// Authentication → Sign In / Providers → Email); otherwise signUp returns no
+// session and nothing here can run.
 //
-// Accounts it creates are usernames rlstest-<runid>-a / -b, backed by the same
-// reserved-TLD synthetic address the app uses. Cleanup SQL is printed at the end.
+// Accounts it creates are rlstest-<runid>-a / -b at example.com, a domain
+// reserved by RFC 2606 that accepts no mail. Cleanup SQL is printed at the end.
 import { createClient } from '@supabase/supabase-js';
 import { loadEnv } from './env.mjs';
 
 const { url, key } = loadEnv();
-// Must match SYNTH_DOMAIN in src/main.js: a reserved TLD (RFC 6761) that can
-// never resolve or receive mail, so nothing is ever delivered anywhere.
-const DOMAIN = 'codecamp.test';
+// Reserved for documentation and examples (RFC 2606), so these addresses cannot
+// collide with, or be delivered to, anything real.
+const DOMAIN = 'example.com';
 const RUN = Date.now().toString(36);
 
 const results = [];
@@ -29,16 +30,15 @@ const client = () => createClient(url, key, { auth: { persistSession: false } })
 
 async function makeUser(tag, name, os) {
   const sb = client();
-  const username = `rlstest-${RUN}-${tag}`;
-  const email = `${username}@${DOMAIN}`;
+  const email = `rlstest-${RUN}-${tag}@${DOMAIN}`;
   const { data, error } = await sb.auth.signUp({
-    email, password: `RlsTest!${RUN}`, options: { data: { name, os, username } },
+    email, password: `RlsTest!${RUN}`, options: { data: { name, os } },
   });
   if (error) throw new Error(`signUp(${tag}) failed: ${error.message}`);
   if (!data.session) throw new Error(
     'signUp returned no session — "Confirm email" is still ON. Disable it under\n' +
     '  Authentication → Sign In / Providers → Email, then re-run.');
-  return { sb, id: data.user.id, email, username };
+  return { sb, id: data.user.id, email };
 }
 
 console.log(`project: ${new URL(url).host}   run: ${RUN}\n`);
@@ -54,16 +54,14 @@ try {
   process.exitCode = 1;
 }
 if (A && B) {
-console.log(`A = ${A.username}\nB = ${B.username}\n`);
+console.log(`A = ${A.email}\nB = ${B.email}\n`);
 
 // ── the signup trigger ────────────────────────────────────────────────
 {
-  const { data } = await A.sb.from('profiles').select('id,name,username,os,role').eq('id', A.id).maybeSingle();
-  check('Signup trigger creates a profile with the right name/username/OS',
-    data?.name === 'Alice Test' && data?.os === 'Windows' && data?.username === A.username,
+  const { data } = await A.sb.from('profiles').select('id,name,email,os,role').eq('id', A.id).maybeSingle();
+  check('Signup trigger creates a profile with the right name/email/OS',
+    data?.name === 'Alice Test' && data?.os === 'Windows' && data?.email === A.email,
     JSON.stringify(data));
-  check('profiles no longer carries an email column', !('email' in (data || {})),
-    'email' in (data || {}) ? 'still present' : 'dropped');
   check('New accounts default to role=participant', data?.role === 'participant', data?.role);
 }
 
@@ -170,10 +168,10 @@ const shotPath = `${A.id}/p1/${crypto.randomUUID()}.jpg`;
 // ── optional: the elevated path ───────────────────────────────────────
 const fi = process.argv.indexOf('--facilitator');
 if (fi > -1) {
-  const [fuser, password] = process.argv.slice(fi + 1);
+  const [femail, password] = process.argv.slice(fi + 1);
   const F = client();
   const { data: sess, error } = await F.auth.signInWithPassword({
-    email: `${String(fuser).trim().toLowerCase()}@${DOMAIN}`, password,
+    email: String(femail).trim().toLowerCase(), password,
   });
   if (error) {
     check('Facilitator sign-in', false, error.message);
@@ -195,7 +193,7 @@ if (fi > -1) {
     check('v_roster counts stamped steps correctly', Number(steps) === 2, `steps_done=${steps}`);
   }
 } else {
-  console.log('\n(skipping facilitator checks — pass --facilitator <username> <password> to include them)');
+  console.log('\n(skipping facilitator checks — pass --facilitator <email> <password> to include them)');
 }
 
 // ── summary ───────────────────────────────────────────────────────────

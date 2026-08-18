@@ -55,7 +55,6 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .field input,.field textarea,.field select{width:100%;background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:10px 12px;font-family:var(--body);font-size:16px}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--stamp);box-shadow:0 0 0 3px var(--stamp-tint)}
 .field .hint{font-size:13.5px;color:var(--ink-faint);margin-top:5px;font-style:italic}
-.nomail{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--stamp);background:var(--stamp-tint);border-radius:3px;padding:7px 10px;margin:0 0 22px !important}
 .authmsg{background:var(--flag-tint);color:var(--flag);border-radius:4px;padding:10px 13px;font-size:14.5px;margin:0 0 16px}
 .authmsg.good{background:var(--stamp-tint);color:var(--stamp)}
 /* Project is misconfigured — aimed at whoever is running the room, not the

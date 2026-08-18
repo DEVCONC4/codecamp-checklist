@@ -1,5 +1,5 @@
 import './styles.css';
-import { supabase, configured, bootFailure, confirmEmailIsOn } from './supabase.js';
+import { supabase, configured, bootFailure, authPreflight } from './supabase.js';
 import { CAMP } from './camp.js';
 import { store, loadProfile, loadAll, flush, isFacilitator } from './store.js';
 import { $, $$, toast, pill } from './ui.js';
@@ -39,12 +39,12 @@ async function refreshRoom() {
 
 // ── auth ─────────────────────────────────────────────────────────────
 
-// Supabase Auth needs an email for password sign-in, so a username is mapped to
-// a reserved-TLD address that can never resolve or receive mail (RFC 6761).
-// Nothing is ever sent to it and it is never shown to anyone.
-const SYNTH_DOMAIN = 'codecamp.test';
-const USERNAME_RE = /^[a-z0-9](?:[a-z0-9._-]{1,28}[a-z0-9])?$/;
-const toEmail = (username) => `${username.trim().toLowerCase()}@${SYNTH_DOMAIN}`;
+// Plain email + password, the way Supabase Auth works out of the box. No mail is
+// ever sent: "Confirm email" is off for the camp (README §4) and there is no
+// magic link, OTP or password reset anywhere, so the address is only ever an
+// identifier. Loose check on purpose — Supabase does the real validation, and a
+// stricter regex here would only reject addresses that actually work.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 let mode = 'signin';
 
@@ -80,32 +80,46 @@ function warn(html) {
   el.innerHTML = html;
 }
 
-// Reached three ways — asked for at boot, inferred from a session-less signup,
-// or diagnosed from the 429 — so the instruction is written once.
+// Both project settings live on the same dashboard page, so the fix is one trip
+// either way. Each is reached more than once — asked for at boot, and again from
+// the error a live attempt returns — so the wording is written once.
+const DASH = '<strong>Authentication → Sign In / Providers → Email</strong>';
+
+// `alsoConfirm` folds the second setting into the same message when both are
+// wrong, which is the likely case: they are adjacent switches with similar
+// names, and turning the provider off is the classic misfire when reaching for
+// confirmation. One trip to the dashboard instead of two.
+function warnProviderOff(alsoConfirm = false) {
+  warn(
+    `Email sign-in is switched off for this project, so nobody can sign up or sign in. Under ${DASH}, ` +
+    'turn <strong>Enable email provider</strong> back <strong>on</strong>' +
+    (alsoConfirm
+      ? ' and uncheck <strong>Confirm email</strong> while you are there — both are wrong right now, ' +
+        'and they are two different switches.'
+      : ', leaving <strong>Confirm email</strong> unchecked. They are two different switches.'),
+  );
+}
+
 function warnConfirmEmail() {
   warn(
-    'This project still has <strong>Confirm email</strong> switched on, so signing up is broken. ' +
-    'Login is by username: the address behind it ends in <code>.test</code> and can never receive ' +
-    'the confirmation, and the built-in mail server allows only a couple of sends an hour, so most ' +
-    'of the room gets a rate-limit error instead of an account. Waiting will not help. ' +
-    'A facilitator: uncheck it under <strong>Authentication → Sign In / Providers → Email</strong>, ' +
-    'then run <code>supabase/migrations/0004_confirm_camp_users.sql</code> to release the accounts ' +
-    'already made.',
+    `<strong>Confirm email</strong> is on for this project, which breaks signups for a camp: under ${DASH}, ` +
+    'uncheck it. Supabase mails every new account, the built-in mail server allows only a couple of ' +
+    'sends an hour, and the rest of the room gets a rate-limit error instead of an account — waiting ' +
+    'does not clear it. Accounts already stuck can be released with ' +
+    '<code>supabase/migrations/0004_confirm_existing_users.sql</code>.',
   );
 }
 
 async function submitAuth() {
   const btn = $('#authBtn');
-  const username = $('#pUser').value.trim().toLowerCase();
+  const email = $('#pUser').value.trim().toLowerCase();
   const password = $('#pPass').value;
   const name = $('#pName').value.trim();
   const os = $('#pOS').value;
 
-  if (!username || !password) return msg('Username and password are both needed.');
+  if (!email || !password) return msg('Email and password are both needed.');
   if (mode === 'signup') {
-    if (!USERNAME_RE.test(username)) {
-      return msg('Usernames are 3–30 characters: letters, numbers, dots, dashes and underscores.');
-    }
+    if (!EMAIL_RE.test(email)) return msg("That doesn't look like an email address.");
     if (!name) return msg('Add your name — it goes on your project write-up.');
     if (password.length < 8) return msg('Use at least 8 characters.');
   }
@@ -115,25 +129,29 @@ async function submitAuth() {
   try {
     if (mode === 'signup') {
       const { data, error } = await supabase.auth.signUp({
-        email: toEmail(username), password, options: { data: { name, os, username } },
+        email, password, options: { data: { name, os } },
       });
       if (error) throw error;
-      // Confirm email must be off for a camp; if someone turns it back on,
-      // signUp returns no session, and the confirmation was mailed to an
-      // address that cannot receive it, so nobody can finish on their own.
+      // No session back means the project is waiting on a confirmation click.
+      // Say whose problem that is rather than sending someone to check a mailbox
+      // for a message that may be an hour behind, or capped and never sent.
       if (!data.session) {
         warnConfirmEmail();
         msg('Account created, but sign-in is blocked until a facilitator fixes the project setting above.');
         return;
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email: toEmail(username), password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
     }
   } catch (e) {
-    // The mail cap can only be hit if confirmation is on, whatever the boot
-    // check managed to find out.
-    if (e?.code === 'over_email_send_rate_limit' || /email rate limit/i.test(e?.message || '')) {
+    // A live attempt is the better oracle: it sees the current setting, while
+    // the boot check may have run before someone touched the dashboard.
+    const code = e?.code || '';
+    const m = e?.message || '';
+    if (code === 'email_provider_disabled' || /signups are disabled|provider is disabled/i.test(m)) {
+      warnProviderOff();
+    } else if (code === 'over_email_send_rate_limit' || /email rate limit/i.test(m)) {
       warnConfirmEmail();
     }
     msg(friendly(e));
@@ -143,35 +161,38 @@ async function submitAuth() {
   }
 }
 
-// Supabase phrases these in terms of the address it stores, which nobody here
-// has ever seen. Translate before showing them.
+// Supabase's own wording is fine for developers and useless in a room of
+// beginners. Translate, and keep every message about what to do next.
 //
-// Prefer error.code: the two 429s look identical in prose but need opposite
-// advice — a per-IP request cap really does clear if you wait, while the mail
-// cap is a project setting that never will. Older gotrue builds send no code,
-// so the message patterns stay as a fallback.
+// Keyed on error.code, because prose collapses distinctions that matter: the two
+// 429s read almost identically but need opposite advice — a per-IP request cap
+// really does clear if you wait, a mail cap is a project setting that never
+// will. Older gotrue builds send no code, so the patterns stay as a fallback.
 const BY_CODE = {
-  user_already_exists: 'That username is taken — pick another.',
-  email_exists: 'That username is taken — pick another.',
-  invalid_credentials: 'No account with that username and password.',
-  email_address_invalid: 'That username has characters Supabase will not accept.',
+  user_already_exists: 'There is already an account with that email — sign in instead.',
+  email_exists: 'There is already an account with that email — sign in instead.',
+  invalid_credentials: 'No account with that email and password.',
+  email_address_invalid: 'Supabase will not accept that address. Try another.',
+  validation_failed: 'Check the email address — Supabase would not accept it.',
   email_not_confirmed:
     'This account was made while the project still required email confirmation, so it is stuck. ' +
-    'A facilitator can release it — see 0004_confirm_camp_users.sql.',
+    'A facilitator can release it — see 0004_confirm_existing_users.sql.',
   weak_password: 'Use at least 8 characters.',
-  signup_disabled: 'Signups are switched off on this project. Ask a facilitator.',
+  email_provider_disabled: 'Email sign-in is switched off on this project — see the note above.',
+  signup_disabled: 'New signups are switched off on this project. Ask a facilitator.',
   over_email_send_rate_limit:
-    'Signups are blocked by a project setting, not by you — see the note above.',
+    'Signups are blocked by a project setting, not by anything you did — see the note above.',
   over_request_rate_limit:
     'Too many attempts from this room just now — wait a minute and try again.',
 };
 
 function friendly(e) {
   const m = (typeof e === 'string' ? e : e?.message) || '';
-  if (typeof e === 'object' && e?.code && BY_CODE[e.code]) return BY_CODE[e.code];
+  if (BY_CODE[e?.code]) return BY_CODE[e.code];
   if (/already registered|already exists/i.test(m)) return BY_CODE.user_already_exists;
   if (/invalid login credentials/i.test(m)) return BY_CODE.invalid_credentials;
   if (/email address .* invalid/i.test(m)) return BY_CODE.email_address_invalid;
+  if (/signups are disabled|provider is disabled/i.test(m)) return BY_CODE.email_provider_disabled;
   if (/not confirmed/i.test(m)) return BY_CODE.email_not_confirmed;
   if (/email rate limit/i.test(m)) return BY_CODE.over_email_send_rate_limit;
   if (/rate limit/i.test(m)) return BY_CODE.over_request_rate_limit;
@@ -187,9 +208,14 @@ async function boot() {
   $('#campCode').textContent = CAMP.code;
   setMode('signin');
 
-  // Ask the project up front rather than letting thirty people discover it one
-  // 429 at a time. Not awaited: a slow settings call must not hold the gate.
-  confirmEmailIsOn().then((on) => { if (on) warnConfirmEmail(); });
+  // Ask the project up front rather than letting thirty people discover a
+  // misconfiguration one failed signup at a time. Not awaited: a slow settings
+  // call must not hold the gate. Provider-off is the louder of the two — with it
+  // off, nothing works at all — so it wins if somehow both are wrong.
+  authPreflight().then(({ emailProviderOff, confirmEmailOn }) => {
+    if (emailProviderOff) warnProviderOff(confirmEmailOn === true);
+    else if (confirmEmailOn) warnConfirmEmail();
+  });
 
   $('#authBtn').addEventListener('click', submitAuth);
   $('#swapBtn').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
@@ -237,11 +263,10 @@ async function enter(user) {
     if (!profile) {
       // The signup trigger normally makes this; a project restored without it
       // would otherwise leave the user staring at a blank app.
-      const fallbackUser = user.user_metadata?.username || String(user.email || '').split('@')[0];
       const { error } = await supabase.from('profiles').insert({
         id: user.id,
-        name: user.user_metadata?.name || fallbackUser,
-        username: fallbackUser,
+        name: user.user_metadata?.name || String(user.email || '').split('@')[0],
+        email: user.email,
         os: user.user_metadata?.os || 'Windows',
       });
       if (error) throw error;

@@ -32,8 +32,12 @@ It creates:
 | `v_roster`, `v_submissions` | flattened views for the Excel export |
 | RLS on everything | participants see only their own rows; facilitators see the room |
 
-Then run [`0003_username_auth.sql`](supabase/migrations/0003_username_auth.sql),
-which switches login to usernames and drops the email column.
+Then run [`0003_username_auth.sql`](supabase/migrations/0003_username_auth.sql)
+and [`0005_email_login.sql`](supabase/migrations/0005_email_login.sql), in that
+order. `0003` moved login to usernames behind synthetic addresses; `0005` undoes
+that and puts login back on plain email + password. Both are listed because the
+pair is what a project applying migrations in order will run — starting fresh,
+the state you end up in is the same either way.
 
 Finally, [`0002_realtime.sql`](supabase/migrations/0002_realtime.sql) to make the
 facilitator room update live. It's optional — skip it and the desk falls back to
@@ -43,7 +47,7 @@ PostgREST, where RLS still decides what comes back.
 
 Using the CLI instead? `supabase db push` picks them all up in order.
 
-[`0004_confirm_camp_users.sql`](supabase/migrations/0004_confirm_camp_users.sql)
+[`0004_confirm_existing_users.sql`](supabase/migrations/0004_confirm_existing_users.sql)
 is a repair, not a step: run it only if accounts were created before you turned
 email confirmation off in step 4. It matches nothing on a correctly configured
 project.
@@ -93,29 +97,34 @@ environments, then redeploy if you'd already built once.
 
 Nothing here is Vercel-specific — any static host works.
 
-### 4 · Turn OFF email confirmation
+### 4 · Set the two email switches
 
-**Authentication → Sign In / Providers → Email → uncheck "Confirm email".**
+Both are on one page — **Authentication → Sign In / Providers → Email** — and
+they are easy to mix up, so check them against this:
 
-Participants sign in with a **username**, never an email — but Supabase Auth
-still requires an address internally, so the app registers
-`<username>@codecamp.test`. `.test` is reserved by RFC 6761: it can never
-resolve and can never receive mail, so nothing is ever delivered anywhere and
-no address can collide with something real.
+| | |
+|---|---|
+| **Enable email provider** | **ON** — off means *"Email signups are disabled"* and nobody can sign up or sign in at all |
+| **Confirm email** | **OFF** — on means signups start failing with a rate-limit error after roughly the second account |
 
-Leaving confirmation on breaks the camp anyway. Supabase would try to mail every
-one of those undeliverable addresses, and the built-in shared SMTP is
-rate-limited to a couple of messages per hour on the free tier — so most of the
-room simply could not create an account. With it off, no mail is ever sent and
-there is no rate limit to hit.
+Login is plain email + password. Nothing is ever mailed: with confirmation off,
+the app makes exactly two auth calls, `signUp` and `signInWithPassword`, and
+there is no magic link, OTP or password reset anywhere. The address is only ever
+an identifier, so an address that cannot receive mail works fine.
 
-The app makes exactly two auth calls, `signUp` and `signInWithPassword`. There
-is no magic link, OTP or password reset anywhere, so email delivery is never on
-the critical path.
+That is also why confirmation has to be off. Leave it on and Supabase mails a
+confirmation link to every new account, the built-in shared SMTP is rate-limited
+to a couple of messages an hour, and most of the room gets `429` instead of an
+account — and anyone who did get through is stuck on *"Email not confirmed"*
+until [`0004_confirm_existing_users.sql`](supabase/migrations/0004_confirm_existing_users.sql)
+releases them.
 
-> **No password reset.** Nobody can recover a forgotten password without a real
-> address. For a one-day camp that is the right trade, but say it out loud at
-> the start, and be ready to reset one from the dashboard.
+The gate reads `/auth/v1/settings` on load and says so on the page if either
+switch is wrong, so you find out before thirty people do.
+
+> **No password reset.** With confirmation off there is no mail path, so nobody
+> can recover a forgotten password. For a one-day camp that is the right trade,
+> but say it out loud at the start, and be ready to reset one from the dashboard.
 
 ### 5 · Check it
 
@@ -131,7 +140,7 @@ A's screenshots in storage or mint a signed URL for them; and that a participant
 cannot promote themselves to facilitator. Add the elevated path with:
 
 ```bash
-node scripts/rls-test.mjs --facilitator yourusername yourpassword
+node scripts/rls-test.mjs --facilitator you@example.com yourpassword
 ```
 
 It prints cleanup SQL for the accounts it created.
@@ -141,7 +150,7 @@ It prints cleanup SQL for the accounts it created.
 Sign up through the app first, then promote that account:
 
 ```sql
-update public.profiles set role = 'facilitator' where username = 'yourname';
+update public.profiles set role = 'facilitator' where email = 'you@example.com';
 ```
 
 Sign out and back in. A **Facilitator** tab appears, and mentor notes start

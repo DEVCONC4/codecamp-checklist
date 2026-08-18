@@ -20,22 +20,32 @@ export const supabase = configured
   ? createClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } })
   : null;
 
-// Ask the project whether "Confirm email" is still on (README §4). It has to be
-// off: login is by username, so the app registers <username>@codecamp.test —
-// undeliverable by design — and with confirmation on, Supabase tries to mail
-// every one of those. The built-in SMTP allows a couple of sends per hour, so
-// the third signup of the day comes back 429 and every one after it, which
-// reads like "too many attempts" when nothing will ever clear. /auth/v1/settings
-// is public and needs no session, so this can run before anyone touches the
-// form. Returns null when the answer can't be had — never guess on a bad link.
-export async function confirmEmailIsOn() {
+// Two switches on Authentication → Sign In / Providers → Email decide whether
+// anyone can sign up at all, and getting either wrong fails in a way the error
+// text doesn't explain (README §4):
+//
+//   Enable email provider  must be ON   — off ⇒ "Email signups are disabled"
+//   Confirm email          must be OFF  — on  ⇒ 429 after ~2 signups, because
+//                                         the built-in SMTP caps sends at a
+//                                         couple an hour and confirmation mails
+//                                         every new account
+//
+// /auth/v1/settings is public and needs no session, so the gate can ask before
+// anyone types. Each field is null when it can't be read — never guess on a bad
+// link, and never warn about a project we failed to reach.
+export async function authPreflight() {
+  const unknown = { emailProviderOff: null, confirmEmailOn: null };
   try {
     const r = await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } });
-    if (!r.ok) return null;
-    const { mailer_autoconfirm } = await r.json();
-    return typeof mailer_autoconfirm === 'boolean' ? !mailer_autoconfirm : null;
+    if (!r.ok) return unknown;
+    const s = await r.json();
+    const flip = (v) => (typeof v === 'boolean' ? !v : null);
+    return {
+      emailProviderOff: flip(s.external?.email),
+      confirmEmailOn: flip(s.mailer_autoconfirm),
+    };
   } catch {
-    return null;
+    return unknown;
   }
 }
 

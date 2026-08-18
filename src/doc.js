@@ -242,7 +242,9 @@ footer{border-top:2px solid var(--ink);margin-top:36px;padding-top:22px;font-siz
 <header>
   <span class="lbl">${esc(CAMP.title)} · ${esc(CAMP.code)} · Progress report</span>
   <h1>${esc(me.name)}</h1>
-  <div class="who">${esc(me.os || '')}${me.username ? ' · @' + esc(me.username) : ''} · ${esc(when)}</div>
+  <!-- Name, OS and date only. The write-up is meant to be shared, and the
+       account's email address has no business travelling with it. -->
+  <div class="who">${esc(me.os || '')} · ${esc(when)}</div>
   <div class="bar"><i style="width:${Math.round((done / TOTAL) * 100)}%"></i></div>
   <div class="who">${done} of ${TOTAL} required steps stamped${complete ? ' · complete' : ''}</div>
 </header>
