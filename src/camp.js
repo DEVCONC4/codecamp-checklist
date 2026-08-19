@@ -2,6 +2,16 @@
 // nothing else. Content is audited against the Barangay AI repo (context/):
 // where the app and this file disagree, the app wins.
 //
+// Step bodies mark up DO and READ differently, so a participant can find the
+// next thing they have to type without re-reading the prose:
+//
+//   <ol class="acts"><li>…   an action, numbered and in order
+//   <div class="lesson">…    explanation — why it works, what to look at
+//   <div class="callout">…   an aside or a gotcha
+//   <p class="cmdlabel">…    which machine the command block below it is for
+//
+// Nothing outside .acts is an instruction. Worth keeping to as steps are added.
+//
 // Proof types: text | longtext | choice (needs options) | screenshot.
 // Optionality is DERIVED, never declared — a step with no required proof is
 // automatically optional and drops out of the completion gate. Strip the last
@@ -110,26 +120,31 @@ python --version">Copy</button></div>
           body: `
             <p>A fork is your own copy of someone else's code — like photocopying a recipe so you can add your own twist. Open the repo and click <strong>Fork</strong> at the top right.</p>
             <p>→ <a href="https://github.com/Spod101/barangayAI" target="_blank" rel="noopener">github.com/Spod101/barangayAI</a></p>
-            <p>Your fork lives at <code>github.com/&lt;your-username&gt;/barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Hour 4.</p>`,
+            <p><strong>On the fork screen, change the repository name to <code>&lt;surname&gt;_barangayAI</code></strong> before you click the green button. So if your surname is Dela Cruz, the name is <code>delacruz_barangayAI</code> — lowercase, no spaces.</p>
+            <p>Repository name is the box right under <em>Owner</em>; GitHub fills it with <code>barangayAI</code>, so type over it. Everything else on that screen stays as it is.</p>
+            <p>Your fork then lives at <code>github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Hour 4. Keep the name — the rest of the day's commands assume it, and it's how the facilitators find your repo in a room of thirty identical ones.</p>`,
           proofs: [
-            { key: 'forkurl', type: 'text', label: "Your fork's URL", hint: 'Should have your username in it, not Spod101', required: true },
+            { key: 'forkurl', type: 'text', label: "Your fork's URL", hint: 'Should have your username in it, not Spod101, and end in <surname>_barangayAI', required: true },
           ],
-          mentorNote: 'Watch for people who skip the fork and clone the original. Everything works until git push in Hour 4, then they get permission denied and have to redo the remote under time pressure. Catching it here is worth the thirty seconds.',
+          mentorNote: 'Two things to catch here, both cheap now and expensive later. People who skip the fork and clone the original: everything works until git push in Hour 4, then permission denied under time pressure. And people who forget to rename — the fork screen defaults to barangayAI, so the rename is easy to click past. Renaming after the fact is fine (Settings → General → Repository name), but their clone folder and remote are then wrong too.',
         },
         {
           id: 'h1c',
           title: 'Get the code on your computer',
           minutes: 15,
           body: `
-            <p>Clone your fork — use <strong>your own</strong> username, not Spod101 — then open the folder in VS Code.</p>
-            <div class="codeblock"><pre>git clone https://github.com/&lt;your-username&gt;/barangayAI.git
-cd barangayAI</pre><button class="copy" data-copy="git clone https://github.com/<your-username>/barangayAI.git
-cd barangayAI">Copy</button></div>
+            <p>Clone your fork — use <strong>your own</strong> username and <strong>your own</strong> repo name from the last step, not Spod101's.</p>
+            <div class="codeblock"><pre>git clone https://github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI.git
+cd &lt;surname&gt;_barangayAI</pre><button class="copy" data-copy="git clone https://github.com/<your-username>/<surname>_barangayAI.git
+cd <surname>_barangayAI">Copy</button></div>
+            <p>Both angle-bracket bits are placeholders — replace them, brackets and all. Easiest way to get it right: open your fork on GitHub, click the green <strong>Code</strong> button and copy the URL it gives you.</p>
+            <p>Then open that folder in VS Code — <strong>File → Open Folder</strong>, pick <code>&lt;surname&gt;_barangayAI</code>. The folder name shows at the top of the sidebar; that's what the screenshot below wants.</p>
             <p>Just reading along and not forking? Clone the original instead — but you won't be able to push your changes later.</p>`,
           proofs: [
             { key: 'how', type: 'choice', label: 'How did you get the code?', options: ['git clone', 'Downloaded the ZIP'], required: true },
+            { key: 'shot', type: 'screenshot', label: 'The project open in VS Code, folder name visible', hint: 'The folder in the sidebar should read <surname>_barangayAI — that one frame shows the clone worked and that you cloned your own fork', required: true },
           ],
-          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Hour 4. Steer everyone to clone unless Git is genuinely broken on their machine.',
+          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Hour 4. Steer everyone to clone unless Git is genuinely broken on their machine. The screenshot is the cheap check on the previous step too: a sidebar reading plain barangayAI means they cloned the original, or forked without renaming, and both are far cheaper to fix now than at git push in Hour 4.',
         },
       ],
     },
@@ -142,19 +157,33 @@ cd barangayAI">Copy</button></div>
           title: 'Start Ollama the right way',
           minutes: 15,
           body: `
-            <p>Open a terminal <strong>in the project folder</strong> and run the bundled script. It clears anything stuck on the port, then starts the server with browser access enabled. <strong>Leave that terminal open.</strong></p>
-            <div class="codeblock"><pre>.\\start-ollama.cmd     # Windows — the leading .\\ is required
-./start-ollama.sh      # macOS / Linux — run chmod +x start-ollama.sh once first</pre><button class="copy" data-copy=".\\start-ollama.cmd">Copy</button></div>
-            <p>Prefer typing it yourself? Same thing in one line:</p>
+            <p>Open a terminal <strong>in the project folder</strong>. Whichever way you go below, it does the same two things: clears anything stuck on the port, then starts the server with browser access enabled. <strong>Leave that terminal open.</strong></p>
+            <p>Three ways to do it — pick <em>one</em>, then tell the proof box which one you picked.</p>
+
+            <h4 class="opthead"><span class="tag">Way 1</span>The bundled script</h4>
+            <p>Already sitting in the project you cloned. Recommended — it handles the port and the permission for you. <strong>Run only the block for your machine.</strong></p>
+            <p class="cmdlabel">Windows <span class="note">the leading .\\ is required</span></p>
+            <div class="codeblock"><pre>.\\start-ollama.cmd</pre><button class="copy" data-copy=".\\start-ollama.cmd">Copy</button></div>
+            <p class="cmdlabel">macOS / Linux <span class="note">the chmod line is only needed the first time</span></p>
+            <div class="codeblock"><pre>chmod +x start-ollama.sh
+./start-ollama.sh</pre><button class="copy" data-copy="chmod +x start-ollama.sh
+./start-ollama.sh">Copy</button></div>
+
+            <h4 class="opthead"><span class="tag">Way 2</span>The one-liner</h4>
+            <p>Prefer typing it yourself? Same two things, one line. The two versions are <strong>not</strong> interchangeable — they're different languages, not different spellings of the same command.</p>
+            <p class="cmdlabel">Windows <span class="note">PowerShell</span></p>
             <div class="codeblock"><pre>Stop-Process -Name "ollama*" -Force -ErrorAction SilentlyContinue; $env:OLLAMA_ORIGINS="*"; ollama serve</pre><button class="copy" data-copy="Stop-Process -Name &quot;ollama*&quot; -Force -ErrorAction SilentlyContinue; $env:OLLAMA_ORIGINS=&quot;*&quot;; ollama serve">Copy</button></div>
+            <p class="cmdlabel">macOS / Linux <span class="note">bash or zsh</span></p>
             <div class="codeblock"><pre>pkill -f ollama; OLLAMA_ORIGINS=* ollama serve</pre><button class="copy" data-copy="pkill -f ollama; OLLAMA_ORIGINS=* ollama serve">Copy</button></div>
-            <div class="callout"><strong>Windows gotcha:</strong> <code>OLLAMA_ORIGINS=* ollama serve</code> is bash syntax. PowerShell doesn't understand it and fails silently-ish. Use <code>$env:OLLAMA_ORIGINS="*"</code>. This is the most common dead-end of the day.</div>
-            <p>Already did the pre-install step? Then opening the normal Ollama app from the tray or menu bar is enough — the permission stuck.</p>`,
+            <div class="callout"><strong>Windows gotcha:</strong> <code>OLLAMA_ORIGINS=* ollama serve</code> is the macOS / Linux line. PowerShell doesn't understand it and fails silently-ish. On Windows you want <code>$env:OLLAMA_ORIGINS="*"</code>. This is the most common dead-end of the day.</div>
+
+            <h4 class="opthead"><span class="tag">Way 3</span>Just opened the Ollama app</h4>
+            <p>Did the pre-install step already? Then opening the normal Ollama app from the tray or menu bar is enough — the permission stuck. No terminal needed.</p>`,
           proofs: [
-            { key: 'how', type: 'choice', label: 'How did you start it?', options: ['The bundled script', 'The one-liner', 'Just opened the Ollama app'], required: true },
+            { key: 'how', type: 'choice', label: 'How did you start it?', hint: 'Way 1, 2 or 3 above — the answers here use the same wording as the headings', options: ['The bundled script', 'The one-liner', 'Just opened the Ollama app'], required: true },
             { key: 'shot', type: 'screenshot', label: 'Terminal with the server running', required: true },
           ],
-          mentorNote: 'Roughly all camp-day blockers are one of four things: OLLAMA_ORIGINS not set, a stale background Ollama holding port 11434, bash syntax typed into PowerShell, or index.html opened by double-click. Keep the troubleshooting section on the projector. ‘Port already in use’ always means kill it first — Stop-Process -Name ‘ollama*’ -Force on Windows, pkill -f ollama elsewhere.',
+          mentorNote: 'Roughly all camp-day blockers are one of four things: OLLAMA_ORIGINS not set, a stale background Ollama holding port 11434, bash syntax typed into PowerShell, or index.html opened by double-click. Keep the troubleshooting section on the projector. ‘Port already in use’ always means kill it first — Stop-Process -Name ‘ollama*’ -Force on Windows, pkill -f ollama elsewhere. The commands are split by machine now, so the fastest triage question is ‘which way did you start it, and what did the label above the block say?’ — a Windows user who ran the macOS line is the most common answer.',
         },
         {
           id: 'h2b',
@@ -166,6 +195,7 @@ cd barangayAI">Copy</button></div>
             <p>This is the AI running entirely on your machine. No internet, no account, no per-token fee. Pull your wifi out and it still answers.</p>`,
           proofs: [
             { key: 'asked', type: 'text', label: 'What did you ask it?', required: true },
+            { key: 'replied', type: 'longtext', label: 'What did it answer?', hint: 'Paste or retype the reply — a couple of sentences is plenty. This is the line that proves a model on your own machine actually spoke back', required: true },
           ],
           mentorNote: 'This step exists to split the debugging surface. If the terminal works and the browser doesn’t, it’s CORS or the web server — never the model. Point that out loud; it saves you an hour of misdiagnosis across the room.',
         },
@@ -174,19 +204,69 @@ cd barangayAI">Copy</button></div>
           title: 'Serve the app and send your first message',
           minutes: 20,
           body: `
-            <p>In a <strong>third</strong> terminal, from the project folder:</p>
-            <div class="codeblock"><pre>python -m http.server 8000</pre><button class="copy" data-copy="python -m http.server 8000">Copy</button></div>
-            <p>Then open <strong>http://localhost:8000</strong>. Do <strong>not</strong> double-click <code>index.html</code> — opened that way the browser blocks parts of the app.</p>
-            <p>A three-step welcome wizard opens first. Step 2, <strong>Pick a model</strong>, has a spec checker — tell it your RAM and graphics card and it sorts every model into what your machine can handle, and downloads one for you if you skipped the terminal. Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Hour 3.</p>
-            <div class="callout">The wizard reopens on every reload. That's normal, not a bug — close it and carry on. The book icon next to the gear opens the <strong>Camp Guidebook</strong>: these same steps, inside the app.</div>
-            <p>Check the chip at the top right. Green means your model is reachable, and it names the model once you've picked one — it reads <strong>Ollama</strong> only until then. Red, or <em>Offline</em>, means the browser still can't reach Ollama: go back to the previous step. In the sidebar, <strong>Sources</strong> already has a document loaded — reference material your AI can quote from on day one.</p>
-            <p>Now pick your model in the model picker, type <strong>"Kumusta!"</strong>, and watch it reply word by word.</p>
-            <div class="callout">Nothing is selected by default — you have to choose a model after the app discovers what Ollama has. That's deliberate.</div>`,
+            <p>Your first two terminals are busy — one running the server, one running the chat. This is a <strong>third</strong> one, and it opens wherever your computer feels like, so the first thing to do is walk it to the project folder.</p>
+
+            <ol class="acts">
+              <li>
+                <p>Open a third terminal and go to the project folder.</p>
+                <p class="cmdlabel">Any machine <span class="note">same command on Windows, macOS and Linux</span></p>
+                <div class="codeblock"><pre>cd &lt;surname&gt;_barangayAI</pre><button class="copy" data-copy="cd <surname>_barangayAI">Copy</button></div>
+                <div class="lesson">
+                  <span class="tag">Why</span>
+                  <p>A new terminal starts in your home folder, not in your project. <code>python -m http.server</code> serves <em>whatever folder you are standing in</em> — run it from the wrong place and you get a file listing of your Documents instead of the app, with no error to tell you why.</p>
+                  <p>Not sure you're in the right place? <code>dir</code> on Windows or <code>ls</code> on macOS / Linux should list <code>index.html</code>. If it doesn't, you're not there yet. Shortcut: in VS Code, <strong>Terminal → New Terminal</strong> opens already inside the project, and you can skip the <code>cd</code>.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Start the web server. Leave this terminal open too.</p>
+                <p class="cmdlabel">Windows</p>
+                <div class="codeblock"><pre>python -m http.server 8000</pre><button class="copy" data-copy="python -m http.server 8000">Copy</button></div>
+                <p class="cmdlabel">macOS / Linux <span class="note">python3, not python</span></p>
+                <div class="codeblock"><pre>python3 -m http.server 8000</pre><button class="copy" data-copy="python3 -m http.server 8000">Copy</button></div>
+                <div class="lesson">
+                  <span class="tag">No Python?</span>
+                  <p>Whichever you told us in the pre-install step works here: <code>npx serve .</code> if you have Node, or right-click <code>index.html</code> in VS Code → <em>Open with Live Server</em>. Both of those pick their own port and will tell you which — use that number in the next action instead of 8000.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Open <strong>http://localhost:8000</strong> in Chrome or Edge.</p>
+                <div class="lesson">
+                  <span class="tag">Not by double-clicking</span>
+                  <p>Do <strong>not</strong> double-click <code>index.html</code>. That opens it as <code>file://</code>, and the browser blocks parts of the app — you get a blank page or scripts that never load, and nothing says why. It has to be <code>localhost</code>.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Fill in the three-step welcome wizard that opens.</p>
+                <div class="lesson">
+                  <span class="tag">What it's asking</span>
+                  <p>Step 2, <strong>Pick a model</strong>, has a spec checker — tell it your RAM and graphics card and it sorts every model into what your machine can handle, and downloads one for you if you skipped the terminal.</p>
+                  <p>Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Hour 3.</p>
+                </div>
+                <div class="callout">The wizard reopens on every reload. That's normal, not a bug — close it and carry on. The book icon next to the gear opens the <strong>Camp Guidebook</strong>: these same steps, inside the app.</div>
+              </li>
+
+              <li>
+                <p>Check the status chip at the top right is <strong>green</strong> before going on.</p>
+                <div class="lesson">
+                  <span class="tag">Reading the chip</span>
+                  <p>Green means your model is reachable, and it names the model once you've picked one — until then it just reads <strong>Ollama</strong>. Red, or <em>Offline</em>, means the browser still can't reach Ollama: go back to the previous step, don't carry on here.</p>
+                  <p>While you're looking around: <strong>Sources</strong> in the sidebar already has a document loaded — reference material your AI can quote from on day one.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Pick your model in the model picker, type <strong>"Kumusta!"</strong>, and watch it reply word by word.</p>
+                <div class="callout">Nothing is selected by default — you have to choose a model after the app discovers what Ollama has. That's deliberate.</div>
+              </li>
+            </ol>`,
           proofs: [
             { key: 'selected', type: 'text', label: 'Which model did you select in the app?', required: true },
             { key: 'shot', type: 'screenshot', label: 'The app replying, with the green status chip visible', required: true },
           ],
-          mentorNote: 'Blank page or scripts not loading means they opened it via file:// — serve it properly. ‘No models found’ means either Ollama isn’t running or the wrong instance is; have them open http://localhost:11434/v1/models directly in the browser, which answers both questions at once. Expect ‘the setup box keeps coming back’ — the welcome wizard opens on every reload by design. Say it once to the room and you won’t answer it thirty times.',
+          mentorNote: 'Add ‘which folder is that terminal in?’ to the triage list — a third terminal opens at home, and a server started from the wrong folder shows a file listing rather than an error, so it reads as a broken app. Blank page or scripts not loading means they opened it via file:// — serve it properly. ‘No models found’ means either Ollama isn’t running or the wrong instance is; have them open http://localhost:11434/v1/models directly in the browser, which answers both questions at once. Expect ‘the setup box keeps coming back’ — the welcome wizard opens on every reload by design. Say it once to the room and you won’t answer it thirty times.',
         },
         {
           id: 'h2d',
@@ -242,12 +322,15 @@ cd barangayAI">Copy</button></div>
             <p>Open <strong>Sources</strong> in the sidebar. Drop in your own <code>.txt</code>, <code>.md</code>, <code>.json</code>, <code>.csv</code>, <code>.log</code>, <code>.pdf</code> or <code>.docx</code> — up to <strong>2 MB each</strong>, anything bigger is skipped — then ask a question only that file could answer.</p>
             <p>The app doesn't stuff the whole file into every message. It pulls just the passages that match your question, which is why a long document still works on a small model.</p>
             <div class="callout"><strong>Nothing is being trained.</strong> Your files are chunked, and the chunks most relevant to each question are retrieved and pasted into the prompt. That's <strong>RAG</strong> — retrieval-augmented generation. The model is <em>grounded</em> on your documents, not trained on them.</div>
-            <p>Open the <strong>Sources</strong> panel under any answer to see exactly which chunk of which file it used, the similarity score that earned it a place, and the literal prompt that was sent to the model.</p>`,
+            <p>Open the <strong>Sources</strong> panel under any answer to see exactly which chunk of which file it used, the similarity score that earned it a place, and the literal prompt that was sent to the model. The proof boxes below ask for your question, the reply, and that chunk and score separately — the last one is the only thing that proves the answer came from your file.</p>`,
           proofs: [
             { key: 'file', type: 'text', label: 'What document did you add?', hint: "Name and roughly what's in it", required: true },
-            { key: 'qa', type: 'longtext', label: 'The question you asked, and what it answered', hint: 'Pick something only your file could answer. Open the Sources panel under the answer and say which chunk it pulled and what the match score was', required: true },
+            { key: 'asked', type: 'text', label: 'What did you ask it?', hint: 'Pick something only your file could answer — a name, a number, a date that is in no model anywhere', required: true },
+            { key: 'replied', type: 'longtext', label: 'What did it answer?', hint: 'Paste the reply. Was it actually right?', required: true },
+            { key: 'chunk', type: 'longtext', label: 'Which chunk did it pull, and what was the match score?', hint: 'Open the Sources panel underneath the answer — it names the file, shows the passage it retrieved, and gives that passage a similarity score. This is the part that shows the answer came from your document and not from the model', required: true },
+            { key: 'shot', type: 'screenshot', label: 'Your question and its answer on screen', hint: 'Expand the Sources panel under the answer before you capture, so the question, the reply, the chunk and the match score are all in one frame', required: true },
           ],
-          mentorNote: 'If anyone says ‘it’s now trained on my file’, correct it there and then — grounded, not trained. Opening the Sources panel to show the retrieved chunk and its similarity score is the single best teaching moment in the camp. Their written answer has to name the chunk and the score, so read for that — it is the only sign they actually opened the panel.',
+          mentorNote: 'If anyone says ‘it’s now trained on my file’, correct it there and then — grounded, not trained. Opening the Sources panel to show the retrieved chunk and its similarity score is the single best teaching moment in the camp. The chunk-and-score box is its own required field now, so a blank or hand-waved one is easy to spot on the desk. The screenshot is the faster check of the two: Sources collapsed in the frame means they never opened it, whatever the text box says.',
         },
       ],
     },

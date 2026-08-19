@@ -39,6 +39,9 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .who .avatar{width:30px;height:30px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700}
 .who small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
 .who strong{font-family:var(--display);font-size:14px}
+.who .whoname{min-width:0}
+.who [data-signout]{margin-left:5px}
+@media (max-width:640px){.who .whoname{display:none}}
 .rail{height:5px;background:var(--panel-2);position:relative;overflow:hidden}
 .rail>i{display:block;height:100%;width:0;background:var(--stamp);transition:width .5s cubic-bezier(.2,.8,.3,1)}
 .rail>i::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 6px,transparent 6px 12px)}
@@ -55,6 +58,18 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .field input,.field textarea,.field select{width:100%;background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:10px 12px;font-family:var(--body);font-size:16px}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--stamp);box-shadow:0 0 0 3px var(--stamp-tint)}
 .field .hint{font-size:13.5px;color:var(--ink-faint);margin-top:5px;font-style:italic}
+/* Password reveal. The button sits inside the input's box rather than beside
+   it, so the field keeps its full width and the label still points at the
+   input. Padding on the input reserves the room the button occupies. */
+.pwwrap{position:relative}
+.pwwrap input{padding-right:46px}
+.pwtoggle{position:absolute;top:50%;right:5px;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;padding:0;background:none;border:0;border-radius:4px;cursor:pointer;color:var(--ink-faint)}
+.pwtoggle:hover{color:var(--stamp);background:var(--panel-2)}
+.pwtoggle svg{width:19px;height:19px;display:block}
+.pwtoggle .eye-shut{display:none}
+.pwtoggle[aria-pressed="true"]{color:var(--stamp)}
+.pwtoggle[aria-pressed="true"] .eye-open{display:none}
+.pwtoggle[aria-pressed="true"] .eye-shut{display:block}
 .authmsg{background:var(--flag-tint);color:var(--flag);border-radius:4px;padding:10px 13px;font-size:14.5px;margin:0 0 16px}
 .authmsg.good{background:var(--stamp-tint);color:var(--stamp)}
 /* Project is misconfigured — aimed at whoever is running the room, not the
@@ -107,6 +122,42 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .codeblock .copy{position:absolute;top:9px;right:9px;background:rgba(237,239,232,.14);color:#DCE5DE;border:1px solid rgba(237,239,232,.3);border-radius:3px;padding:4px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer}
 .codeblock .copy:hover{background:rgba(237,239,232,.28)}
 .callout{border-left:3px solid var(--stamp);background:var(--stamp-tint);padding:13px 16px;border-radius:0 4px 4px 0;margin:0 0 18px;font-size:16px}
+/* Named ways of doing the same step. The name is the wording the proof
+   dropdown uses, verbatim, so nobody has to guess which one they just ran. */
+.opthead{font-family:var(--display);font-size:16px;font-weight:700;margin:26px 0 4px;padding-top:14px;border-top:1.5px solid var(--rule)}
+.opthead .tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-right:8px}
+.opthead+p{margin-top:6px}
+/* Which machine a command is for. Sits on the block, not inside it as a
+   trailing comment — comments pushed these lines past the pane and left every
+   participant a horizontal scrollbar to discover the half that matters. */
+.cmdlabel{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.cmdlabel .note{font-family:var(--body);font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-faint);font-style:italic}
+
+/* Two kinds of content live in a step body, and telling them apart at a glance
+   is the difference between following along and re-reading the paragraph three
+   times looking for the command. The convention, usable in any step:
+
+     <ol class="acts"><li> …  something you DO, numbered, in order
+     <div class="lesson"> …   something you READ — why it works, what it means
+     <div class="callout"> …  an aside or a gotcha (already in use)
+
+   Anything not inside .acts is not a step, so nobody has to guess whether a
+   paragraph wanted something from them. */
+.acts{list-style:none;counter-reset:act;margin:0 0 24px;padding:0}
+.acts>li{counter-increment:act;position:relative;padding-left:46px;margin:0 0 22px}
+.acts>li:last-child{margin-bottom:0}
+.acts>li::before{content:counter(act);position:absolute;left:0;top:0;width:29px;height:29px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;font-weight:700}
+/* A spine down the numbers, so a step that runs long still reads as one list. */
+.acts>li:not(:last-child)::after{content:"";position:absolute;left:14px;top:35px;bottom:-22px;width:1.5px;background:var(--rule)}
+.acts>li>:first-child{margin-top:0}
+.acts>li>:last-child{margin-bottom:0}
+.acts>li>p:first-child{min-height:29px;margin:0 0 10px}
+.acts .lesson,.acts .callout{margin-top:14px}
+
+.lesson{border-left:3px solid var(--rule);padding:1px 0 1px 16px;margin:0 0 20px}
+.lesson>.tag{display:block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.lesson p{color:var(--ink-soft);font-size:16px;margin:0 0 10px}
+.lesson p:last-child{margin-bottom:0}
 
 /* proof section */
 .proof{margin-top:38px;background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:26px 26px 22px;box-shadow:var(--shadow)}

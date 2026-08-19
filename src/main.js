@@ -1,7 +1,7 @@
 import './styles.css';
 import { supabase, configured, bootFailure, authPreflight } from './supabase.js';
 import { CAMP } from './camp.js';
-import { store, loadProfile, loadAll, flush, isFacilitator } from './store.js';
+import { store, loadProfile, loadAll, flush, clearStore, isFacilitator } from './store.js';
 import { $, $$, toast, pill } from './ui.js';
 import { renderAll, wireGlobalKeys } from './steps.js';
 import { renderRecord } from './record.js';
@@ -200,6 +200,50 @@ function friendly(e) {
   return m || 'That did not work.';
 }
 
+// A held-down reveal is no use to someone typing a long password one finger at
+// a time, which is most of this room, so it latches. aria-pressed is the state:
+// the icon swap is CSS keyed on it, and screen readers get the same signal.
+function wirePasswordEye() {
+  const eye = $('#pPassEye');
+  const input = $('#pPass');
+  eye.addEventListener('click', () => {
+    const show = eye.getAttribute('aria-pressed') !== 'true';
+    eye.setAttribute('aria-pressed', String(show));
+    input.type = show ? 'text' : 'password';
+    eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    eye.title = show ? 'Hide password' : 'Show password';
+    // Clicking the button moves focus off the input; put it back where the
+    // caret was so revealing mid-word doesn't cost you your place.
+    const at = input.value.length;
+    input.focus();
+    input.setSelectionRange(at, at);
+  });
+}
+
+// ── sign out ─────────────────────────────────────────────────────────
+
+// Scoped to this device on purpose. Participants are told they can pick up on
+// any machine in the room, and the default global scope would revoke every
+// refresh token they hold — signing out of the laptop by the door would boot
+// them from the one they are sitting at.
+async function signOut() {
+  const btns = $$('[data-signout]');
+  btns.forEach((b) => (b.disabled = true));
+  try {
+    await flush();          // last answer lands while the token is still good
+    unsubscribeRoom();
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch (e) {
+    toast("Couldn't reach Supabase — signed out on this device only");
+  } finally {
+    btns.forEach((b) => (b.disabled = false));
+    // onAuthStateChange normally does this. Call it directly as well: if the
+    // token was already dead the event may never fire, and a failed sign-out
+    // that leaves someone's work on screen is the worst outcome here.
+    leave();
+  }
+}
+
 // ── boot ─────────────────────────────────────────────────────────────
 
 async function boot() {
@@ -217,6 +261,7 @@ async function boot() {
     else if (confirmEmailOn) warnConfirmEmail();
   });
 
+  wirePasswordEye();
   $('#authBtn').addEventListener('click', submitAuth);
   $('#swapBtn').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
   $$('#gate input').forEach((el) =>
@@ -226,11 +271,7 @@ async function boot() {
   $$('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
   $('#refreshRoom').addEventListener('click', refreshRoom);
   $('#xlsxBtn').addEventListener('click', exportXlsx);
-  $('#signOutBtn').addEventListener('click', async () => {
-    await flush();
-    unsubscribeRoom();
-    await supabase.auth.signOut();
-  });
+  $$('[data-signout]').forEach((b) => b.addEventListener('click', signOut));
 
   wireGlobalKeys();
   // Nothing in flight should be lost to a closed tab mid-answer.
@@ -248,9 +289,12 @@ async function boot() {
 
 let entered = null;
 
-async function leave() {
+function leave() {
   entered = null;
   unsubscribeRoom();
+  clearStore();
+  $('#pPass').value = '';
+  setMode('signin');
   $('#app').hidden = true;
   $('#gate').hidden = false;
 }

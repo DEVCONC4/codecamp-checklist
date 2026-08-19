@@ -16,6 +16,18 @@ export const doneCount = () => REQ.filter((s) => store.progress[s.id]?.done).len
 export const allDone = () => doneCount() === TOTAL;
 export const isFacilitator = () => store.profile?.role === 'facilitator';
 
+// Sign-out has to leave nothing behind: the mirror outlives the session, and
+// the next person to sign in on this laptop must not see a flash of the last
+// one's answers before their own load. Pending writes are dropped too — they
+// belong to a session that no longer has the rights to make them.
+export function clearStore() {
+  clearTimeout(timer);
+  dirty.clear();
+  store.profile = null;
+  store.progress = {};
+  store.shots = {};
+}
+
 function blank() {
   const out = {};
   for (const s of STEPS) out[s.id] = { values: {}, done: false, doneAt: null };
