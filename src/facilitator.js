@@ -2,21 +2,78 @@
 // the facilitator could re-parse it; with a database the room is just a query,
 // and incomplete participants show up automatically instead of contributing
 // nothing. RLS decides who may see this, not a PIN in the client bundle.
+//
+// Three questions, in the order a facilitator actually asks them:
+//
+//   who needs me right now             the alerts strip, then the quiet column
+//   where is the room stuck            the per-step chart
+//   what is this one person looking at  tap their name
+//
+// Nothing here writes. The desk reads the room and says where to walk.
 import { supabase } from './supabase.js';
-import { CAMP, STEPS, TOTAL, stepById } from './camp.js';
-import { $, esc, toast, download, slug } from './ui.js';
+import { CAMP, STEPS, REQ, TOTAL, stepById, stepNumber } from './camp.js';
+import { signedUrls } from './store.js';
+import { $, $$, esc, toast, download, slug, zoom, stampHTML } from './ui.js';
 
 let roster = [];
 let subs = [];
+let answer = new Map();  // `user|step|field` -> value
+let stamped = new Set(); // `user|step` for a stamped step
+let stampAt = new Map(); // `user|step` -> when it was stamped
+let sort = 'need';       // need | name | progress
+
+const shotCache = new Map();
 
 const LABEL = {};
 for (const s of STEPS) for (const p of s.proofs) LABEL[`${s.id}.${p.key}`] = p.label;
+
+// ── how long is too long ─────────────────────────────────────────────
+// Silence only means something next to what the step was supposed to cost, and
+// camp.js already carries that estimate — steps run from 5 minutes to 25. Ten
+// quiet minutes on the CORS one-liner is someone stuck; on "deploy to Vercel"
+// it is someone working. So the budget sets the threshold, and these are the
+// floors under it, because a short step still deserves a few minutes' reading.
+const IDLE_WARN = 8;
+const IDLE_BAD = 15;
+
+// ── the tripwires ────────────────────────────────────────────────────
+// Answers that mean "go to this person", lifted out of the mentor notes that
+// used to ask a facilitator to watch for them by eye. The key question is the
+// reason this strip exists: it is self-reported and nothing blocks on it, so
+// an honest answer is only worth having if the desk shouts about it.
+const ALERTS = [
+  {
+    step: 'h4b', key: 'keywhere', is: 'In a file in my repo',
+    level: 'bad', tag: 'KEY',
+    title: 'API key committed to a public repo',
+    what: 'Go now. The key is already public, so it needs rotating at the provider — moving it into Vercel is only the second half of the fix.',
+  },
+  {
+    step: 'h4d', key: 'stuck', is: 'I never got it working',
+    level: 'bad', tag: 'NEVER RAN',
+    title: 'Says they never got it working',
+    what: 'They are filling in the wrap-up having never seen it run. Catch them before they leave the room.',
+  },
+  {
+    step: 'p2', key: 'restarted', is: 'Not yet',
+    level: 'warn', tag: 'CORS',
+    title: 'Ollama not restarted after setting OLLAMA_ORIGINS',
+    what: 'The classic Level 2 dead-end: the server looks healthy and every request from the browser fails. Have them restart Ollama, or point them at the bundled script in Level 2.',
+  },
+  {
+    step: 'h4b', key: 'keywhere', is: "I haven't added one yet",
+    level: 'warn', tag: 'NO KEY',
+    title: 'Published, but no model key yet',
+    what: 'Their live link loads and then answers nothing. Two minutes at Vercel → Settings → Environment Variables, then a redeploy.',
+  },
+];
 
 // ── live updates ─────────────────────────────────────────────────────
 // The realtime event is only a nudge to refetch — never the data itself.
 // loadRoom() goes back through PostgREST, so RLS decides what the facilitator
 // actually sees and we never depend on realtime honouring it.
 let channel = null;
+let clock = null;
 let live = 'off'; // off | connecting | live | manual
 
 export const liveState = () => live;
@@ -38,9 +95,18 @@ export function subscribeRoom(onData, onStatus) {
       else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') live = 'manual';
       onStatus?.();
     });
+
+  // How long someone has been quiet is the one number that changes while
+  // nothing happens, so a silent room still has to re-render — it is exactly
+  // then that the column matters. With no socket the same tick does the
+  // fetching, which turns the manual fallback into a slow live view rather
+  // than a button somebody has to remember to press.
+  clock = setInterval(() => (live === 'live' ? onStatus?.() : onData()), 30000);
 }
 
 export function unsubscribeRoom() {
+  clearInterval(clock);
+  clock = null;
   if (!channel) return;
   supabase.removeChannel(channel);
   channel = null;
@@ -48,18 +114,91 @@ export function unsubscribeRoom() {
 }
 
 export async function loadRoom() {
-  const [r, s] = await Promise.all([
+  const [r, s, g] = await Promise.all([
     supabase.from('v_roster').select('*').order('name'),
     supabase.from('v_submissions').select('*'),
+    // Straight off the table: the roster view can only count stamps, and the
+    // desk needs to know *which* steps they were. RLS hands the whole room to
+    // a facilitator and one row to everyone else.
+    supabase.from('progress').select('user_id, step_id, done, done_at'),
   ]);
   if (r.error) throw r.error;
   if (s.error) throw s.error;
+  if (g.error) throw g.error;
+
   roster = (r.data || []).filter((p) => p.role !== 'facilitator');
-  subs = s.data || [];
+  const ids = new Set(roster.map((p) => p.id));
+
+  // Staff answers are test data. They are already out of the roster; keep them
+  // out of the room's numbers and out of the spreadsheet too.
+  subs = (s.data || []).filter((x) => ids.has(x.user_id));
+
+  answer = new Map();
+  for (const x of subs) answer.set(`${x.user_id}|${x.step_id}|${x.field_key}`, x.value || '');
+
+  stamped = new Set();
+  stampAt = new Map();
+  for (const x of g.data || []) {
+    if (!x.done || !ids.has(x.user_id)) continue;
+    const k = `${x.user_id}|${x.step_id}`;
+    stamped.add(k);
+    if (x.done_at) stampAt.set(k, new Date(x.done_at).getTime());
+  }
+
+  shotCache.clear();
 }
 
-const field = (userId, stepId, key) =>
-  subs.find((x) => x.user_id === userId && x.step_id === stepId && x.field_key === key)?.value || '';
+const field = (userId, stepId, key) => answer.get(`${userId}|${stepId}|${key}`) || '';
+const isDone = (userId, stepId) => stamped.has(`${userId}|${stepId}`);
+
+// Counted against the required steps only, so the number on the desk is the
+// same number the participant sees on their own progress rail.
+const doneCount = (userId) => REQ.reduce((n, s) => n + (isDone(userId, s.id) ? 1 : 0), 0);
+
+// The first required step they have not stamped. Derived from which steps are
+// done rather than from how many — people skip one and come back, and a count
+// read as a position puts them further along than they actually are.
+const nextStep = (userId) => REQ.find((s) => !isDone(userId, s.id)) || null;
+
+// Never null: someone who signed up and has typed nothing has been quiet since
+// they walked in, and that is precisely the person worth surfacing.
+const idleMs = (p) => Date.now() - new Date(p.last_activity_at || p.created_at).getTime();
+const idleMin = (p) => Math.floor(idleMs(p) / 60000);
+
+function ago(ms) {
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m quiet`;
+  return `${Math.floor(m / 60)}h ${m % 60}m quiet`;
+}
+
+// What the step in front of them was budgeted to take, and the two thresholds
+// that follow from it.
+function idleBands(p) {
+  const budget = nextStep(p.id)?.minutes || 10;
+  return { budget, warn: Math.max(IDLE_WARN, budget), bad: Math.max(IDLE_BAD, Math.round(budget * 1.5)) };
+}
+
+const idleLevel = (p) => {
+  if (doneCount(p.id) >= TOTAL) return '';
+  const { warn, bad } = idleBands(p);
+  const m = idleMin(p);
+  return m >= bad ? 'bad' : m >= warn ? 'warn' : '';
+};
+
+// A URL typed by hand, about to become an href on a facilitator's screen. Only
+// http(s) survives; a bare host gets a scheme, since the hint on the live-URL
+// field asks for `your-ai.vercel.app` and most people write exactly that.
+function safeHref(v) {
+  const s = String(v || '').trim();
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(s)) return 'https://' + s;
+  return '';
+}
+
+const flagsFor = (userId) => ALERTS.filter((a) => field(userId, a.step, a.key) === a.is);
+
+// ── the room ─────────────────────────────────────────────────────────
 
 const LIVE_PILL = {
   live: ['on', 'Live'],
@@ -74,61 +213,287 @@ function livePill() {
   return `<span class="livepill ${cls}"><i></i>${text}</span>`;
 }
 
+const SORTS = {
+  // Who to walk to next: unfinished first, longest silence at the top.
+  need: (a, b) => {
+    const ca = doneCount(a.id) >= TOTAL;
+    const cb = doneCount(b.id) >= TOTAL;
+    if (ca !== cb) return ca ? 1 : -1;
+    return idleMs(b) - idleMs(a) || doneCount(a.id) - doneCount(b.id);
+  },
+  name: (a, b) => String(a.name || '').localeCompare(String(b.name || '')),
+  progress: (a, b) => doneCount(b.id) - doneCount(a.id) || idleMs(b) - idleMs(a),
+};
+
+const SORT_LABEL = { need: 'Needs attention', name: 'Name', progress: 'Progress' };
+
+function alertsHTML() {
+  const hits = ALERTS
+    .map((a) => ({ a, who: roster.filter((p) => field(p.id, a.step, a.key) === a.is) }))
+    .filter((h) => h.who.length)
+    .sort((x, y) => (x.a.level === y.a.level ? 0 : x.a.level === 'bad' ? -1 : 1));
+  if (!hits.length) return '';
+
+  return `<div class="alerts">${hits
+    .map(({ a, who }) => `<div class="alert ${a.level}">
+      <span class="eyebrow">${a.level === 'bad' ? 'Go now' : 'Worth a look'} · ${who.length} ${who.length === 1 ? 'person' : 'people'}</span>
+      <strong>${esc(a.title)}</strong>
+      <p>${esc(a.what)}</p>
+      <div class="chips">${who
+        .map((p) => `<button type="button" class="chip" data-user="${esc(p.id)}">${esc(p.name || '(no name)')}</button>`)
+        .join('')}</div>
+    </div>`)
+    .join('')}</div>`;
+}
+
+// Where the wall is. One bar per step, and a marker on the biggest single drop
+// between two consecutive required steps — that gap is the thing to stop the
+// room and re-explain, and it is invisible in a per-person roster.
+//
+// `frontier` is the step the most people have in front of them, which the stats
+// above already name. Counts only ever fall, so mid-camp the biggest drop is
+// usually just the frontier; marking it there would restate the tile rather
+// than point at a cliff, so in that case the marker stays off.
+function wallHTML(frontier) {
+  const list = REQ.concat(STEPS.filter((s) => s.optional));
+  const counts = list.map((s) => roster.filter((p) => isDone(p.id, s.id)).length);
+
+  let wall = -1;
+  if (roster.length >= 3) {
+    let worst = 0;
+    for (let i = 1; i < REQ.length; i++) {
+      const drop = counts[i - 1] - counts[i];
+      if (drop > worst) { worst = drop; wall = i; }
+    }
+    if (wall >= 0 && list[wall].id === frontier) wall = -1;
+  }
+
+  return `<div class="wall">
+    <span class="eyebrow">Stamped, step by step</span>
+    ${list
+      .map((s, i) => {
+        const pct = roster.length ? Math.round((counts[i] / roster.length) * 100) : 0;
+        return `<div class="wrow${i === wall ? ' drop' : ''}">
+          <span class="wn">${stepNumber(s.id)}</span>
+          <span class="wt">${esc(s.title)}</span>
+          ${i === wall ? '<span class="wtag">stalls here</span>' : ''}
+          <span class="wbar"><i style="width:${pct}%"></i></span>
+          <span class="wc">${counts[i]}/${roster.length}</span>
+        </div>`;
+      })
+      .join('')}
+  </div>`;
+}
+
 export function renderRoom() {
+  const out = $('#roomOut');
+  if (!out) return;
+
   if (!roster.length) {
-    $('#roomOut').innerHTML = `${livePill()}<div class="empty"><div class="big">Nobody has signed up yet</div>
+    out.innerHTML = `${livePill()}<div class="empty"><div class="big">Nobody has signed up yet</div>
       Participants appear here the moment they create an account.</div>`;
     return;
   }
 
-  const complete = roster.filter((p) => p.steps_done >= TOTAL).length;
-  const started = roster.filter((p) => p.steps_done > 0).length;
-  const avg = Math.round(roster.reduce((a, p) => a + Number(p.steps_done || 0), 0) / roster.length);
+  const complete = roster.filter((p) => doneCount(p.id) >= TOTAL).length;
+  const started = roster.filter((p) => doneCount(p.id) > 0).length;
+  const avg = Math.round(roster.reduce((a, p) => a + doneCount(p.id), 0) / roster.length);
+  const attention = roster.filter(
+    (p) => idleLevel(p) === 'bad' || flagsFor(p.id).some((f) => f.level === 'bad'),
+  ).length;
 
-  // Where the room actually is: the first required step most people haven't
-  // stamped is the one to talk about from the front.
-  const stuck = {};
+  // Where the room actually is: the step the most people have in front of them
+  // is the one to talk about from the front.
+  const at = {};
   for (const p of roster) {
-    const at = STEPS.filter((s) => !s.optional)[Number(p.steps_done)] || null;
-    if (at) stuck[at.id] = (stuck[at.id] || 0) + 1;
+    const s = nextStep(p.id);
+    if (s) at[s.id] = (at[s.id] || 0) + 1;
   }
-  const worst = Object.entries(stuck).sort((a, b) => b[1] - a[1])[0];
+  const worst = Object.entries(at).sort((a, b) => b[1] - a[1])[0];
 
-  $('#roomOut').innerHTML = `
+  out.innerHTML = `
     ${livePill()}
+    ${alertsHTML()}
     <dl class="stats">
       <div><dt>Signed up</dt><dd>${roster.length}</dd></div>
       <div><dt>Started</dt><dd>${started}</dd></div>
       <div><dt>Complete</dt><dd>${complete}</dd></div>
       <div><dt>Average steps</dt><dd>${avg}/${TOTAL}</dd></div>
-      <div><dt>Most are at</dt><dd style="font-size:15px;line-height:1.35">${worst ? esc(stepById(worst[0]).title) : '—'}</dd></div>
+      <div><dt>Needs attention</dt><dd class="${attention ? 'bad' : ''}">${attention}</dd></div>
+      <div><dt>Most are at</dt><dd class="sm">${
+        worst ? `${stepNumber(worst[0])} · ${esc(stepById(worst[0]).title)}` : 'Everyone is finished'
+      }</dd></div>
     </dl>
-    <div class="roster">${roster
-      .map((p) => {
-        const n = Number(p.steps_done || 0);
-        const pct = Math.round((n / TOTAL) * 100);
-        return `<div class="rline">
-          <span class="nm">${esc(p.name || '(no name)')}</span>
-          <span class="mt">${esc(p.os || '')}</span>
-          <span class="minirail"><i style="width:${pct}%"></i></span>
-          <span class="mt">${n}/${TOTAL}</span>
-          <span class="mt" style="color:${n >= TOTAL ? 'var(--stamp)' : 'var(--flag)'}">${n >= TOTAL ? 'Complete' : 'In progress'}</span>
-          <span class="sp"></span>
-          <span class="mt">${esc(field(p.id, 'h3a', 'ainame') || '—')}</span>
-        </div>`;
-      })
-      .join('')}</div>`;
+    ${wallHTML(worst?.[0])}
+    <div class="rosterhead">
+      <span class="eyebrow">${roster.length} in the room</span>
+      <span class="sp"></span>
+      <span class="eyebrow">Sort</span>
+      <div class="segs">${Object.keys(SORTS)
+        .map((k) => `<button type="button" class="seg" data-sort="${k}" aria-pressed="${k === sort}">${SORT_LABEL[k]}</button>`)
+        .join('')}</div>
+    </div>
+    <div class="roster">${[...roster].sort(SORTS[sort] || SORTS.need).map(rowHTML).join('')}</div>
+    <p class="deskfoot">Tap anyone to see their answers and screenshots.</p>`;
+
+  $$('#roomOut [data-sort]').forEach((b) =>
+    b.addEventListener('click', () => { sort = b.dataset.sort; renderRoom(); }),
+  );
+  $$('#roomOut [data-user]').forEach((b) =>
+    b.addEventListener('click', () => openParticipant(b.dataset.user)),
+  );
 }
+
+function rowHTML(p) {
+  const n = doneCount(p.id);
+  const pct = Math.round((n / TOTAL) * 100);
+  const done = n >= TOTAL;
+  const next = nextStep(p.id);
+  const lvl = idleLevel(p);
+  const flags = flagsFor(p.id);
+  const quiet = n === 0 && idleMin(p) >= IDLE_WARN ? 'not started · ' + ago(idleMs(p)) : ago(idleMs(p));
+  const hot = lvl === 'bad' || flags.some((f) => f.level === 'bad');
+  // Why this one is coloured and the one above it isn't.
+  const why = done ? '' : ` title="${next ? `Step ${stepNumber(next.id)} is budgeted at ${idleBands(p).budget} min` : ''}"`;
+
+  return `<button type="button" class="rline${hot ? ' hot' : ''}" data-user="${esc(p.id)}">
+    <span class="nm">${esc(p.name || '(no name)')}</span>
+    <span class="mt os">${esc(p.os || '')}</span>
+    <span class="minirail"><i style="width:${pct}%"></i></span>
+    <span class="mt ct">${n}/${TOTAL}</span>
+    <span class="nx">${done ? 'Complete' : next ? `${stepNumber(next.id)} · ${esc(next.title)}` : '—'}</span>
+    <span class="sp"></span>
+    <span class="rflags">${flags.map((f) => `<span class="rflag ${f.level}">${f.tag}</span>`).join('')}</span>
+    <span class="idle ${lvl}"${why}>${done ? '' : quiet}</span>
+  </button>`;
+}
+
+// ── one participant ──────────────────────────────────────────────────
+// The read a participant gets of their own record, opened over the desk:
+// answers, screenshots, links. Enough to debug a broken deploy from the front
+// of the room instead of leaning over somebody's keyboard.
+
+async function loadShots(userId) {
+  if (shotCache.has(userId)) return shotCache.get(userId);
+  const { data, error } = await supabase
+    .from('screenshots')
+    .select('id, step_id, field_key, path, name')
+    .eq('user_id', userId)
+    .order('created_at');
+  if (error) return {};
+  const urls = await signedUrls((data || []).map((x) => x.path));
+  const by = {};
+  for (const x of data || []) (by[x.step_id] ||= []).push({ ...x, url: urls[x.path] || '' });
+  shotCache.set(userId, by);
+  return by;
+}
+
+export async function openParticipant(userId) {
+  const p = roster.find((x) => x.id === userId);
+  if (!p) return;
+
+  const n = doneCount(p.id);
+  const flags = flagsFor(p.id);
+  const links = [
+    ['Live site', field(p.id, 'h4b', 'liveurl')],
+    ['Repo', field(p.id, 'h4a', 'repo')],
+    ['Fork', field(p.id, 'h1b', 'forkurl')],
+  ].filter(([, v]) => v);
+
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML = `<div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+    <button class="sheet-x" id="pClose" title="Close" aria-label="Close">×</button>
+    <span class="eyebrow">${esc(p.os || '')}${p.email ? ' · ' + esc(p.email) : ''}</span>
+    <h3 id="pTitle">${esc(p.name || '(no name)')}</h3>
+    <p class="sheet-lede">${n}/${TOTAL} stamped · ${n >= TOTAL ? 'complete' : ago(idleMs(p))}${
+      field(p.id, 'h3a', 'ainame') ? ' · building ' + esc(field(p.id, 'h3a', 'ainame')) : ''
+    }</p>
+    ${flags.length
+      ? `<div class="alerts tight">${flags
+          .map((f) => `<div class="alert ${f.level}"><strong>${esc(f.title)}</strong><p>${esc(f.what)}</p></div>`)
+          .join('')}</div>`
+      : ''}
+    ${links.length
+      ? `<div class="plinks">${links
+          .map(([k, v]) => {
+            const href = safeHref(v);
+            return href
+              ? `<a href="${esc(href)}" target="_blank" rel="noopener"><span class="eyebrow">${k}</span>${esc(v)}</a>`
+              : `<span class="dead"><span class="eyebrow">${k}</span>${esc(v)}</span>`;
+          })
+          .join('')}</div>`
+      : ''}
+    <div id="pBody"><p class="nowt">Loading their screenshots…</p></div>
+    <div class="sheet-foot"><span class="sp"></span><button class="btn btn-ghost btn-sm" id="pDone">Close</button></div>
+  </div>`;
+
+  document.body.appendChild(el);
+
+  const close = () => {
+    el.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  function onKey(ev) {
+    if (ev.key === 'Escape') close();
+  }
+  document.addEventListener('keydown', onKey);
+  el.addEventListener('click', (ev) => { if (ev.target === el) close(); });
+  $('#pClose', el).addEventListener('click', close);
+  $('#pDone', el).addEventListener('click', close);
+
+  const shots = await loadShots(userId);
+  // The sheet can be closed while the signed URLs are still coming back, and
+  // a stale node is harmless to skip.
+  if (!el.isConnected) return;
+
+  $('#pBody', el).innerHTML = REQ.concat(STEPS.filter((s) => s.optional))
+    .map((s) => {
+      const num = stepNumber(s.id);
+      const ans = s.proofs.filter((x) => x.type !== 'screenshot' && field(userId, s.id, x.key));
+      const pics = shots[s.id] || [];
+      return `<div class="rrow">
+        <div class="num">${num}</div>
+        <div>
+          <h4>${esc(s.title)}</h4>
+          ${ans.length
+            ? `<dl class="answers">${ans
+                .map((x) => `<dt>${esc(x.label)}</dt><dd>${esc(field(userId, s.id, x.key))}</dd>`)
+                .join('')}</dl>`
+            : '<p class="nowt">Nothing submitted yet</p>'}
+          ${pics.length
+            ? `<div class="rshots">${pics
+                .map((x) => `<img src="${esc(x.url)}" data-zoom="${esc(x.url)}" alt="${esc(x.name)}">`)
+                .join('')}</div>`
+            : ''}
+        </div>
+        <div class="rstamp">${
+          isDone(userId, s.id)
+            ? stampHTML(num, stampAt.get(`${userId}|${s.id}`))
+            : '<span class="pill">Not stamped</span>'
+        }</div>
+      </div>`;
+    })
+    .join('');
+
+  $$('#pBody [data-zoom]', el).forEach((img) =>
+    img.addEventListener('click', () => zoom(img.dataset.zoom)),
+  );
+}
+
+// ── spreadsheet ──────────────────────────────────────────────────────
 
 export async function exportXlsx() {
   const rosterAoa = [[
     'Name', 'Email', 'OS', 'GitHub', 'AI name', 'Model', 'Language', 'Live URL', 'Repo',
-    'Steps stamped', 'Steps total', 'Status', 'Completed', 'Pace', 'Hardest level', 'Feedback',
+    'Steps stamped', 'Steps total', 'Status', 'Completed', 'Last activity', 'Flags',
+    'Pace', 'Hardest level', 'Could build again', 'Would recommend', 'Stuck for',
+    'What next', 'Best bit', 'Feedback',
   ]];
   const subsAoa = [['Participant', 'OS', 'Step #', 'Step', 'Module', 'Field', 'Answer', 'Stamped at']];
 
   for (const p of roster) {
-    const n = Number(p.steps_done || 0);
+    const n = doneCount(p.id);
     rosterAoa.push([
       p.name || '', p.email || '', p.os || '',
       field(p.id, 'p3', 'gh'),
@@ -140,8 +505,15 @@ export async function exportXlsx() {
       n, TOTAL,
       n >= TOTAL ? 'Complete' : 'In progress',
       n >= TOTAL && p.last_stamp_at ? new Date(p.last_stamp_at).toLocaleString() : '',
+      p.last_activity_at ? new Date(p.last_activity_at).toLocaleString() : '',
+      flagsFor(p.id).map((f) => f.tag).join(' '),
       field(p.id, 'h4d', 'pace'),
       field(p.id, 'h4d', 'hardest'),
+      field(p.id, 'h4d', 'again'),
+      field(p.id, 'h4d', 'recommend'),
+      field(p.id, 'h4d', 'stuck'),
+      field(p.id, 'h4d', 'next'),
+      field(p.id, 'h4d', 'bestbit'),
       field(p.id, 'h4d', 'feedback'),
     ]);
   }
@@ -153,8 +525,7 @@ export async function exportXlsx() {
     if (!s) continue;
     subsAoa.push([
       row.name || '', row.os || '',
-      s.optional ? '—' : String(STEPS.filter((x) => !x.optional).findIndex((x) => x.id === s.id) + 1).padStart(2, '0'),
-      s.title, s.module,
+      stepNumber(s.id), s.title, s.module,
       LABEL[`${row.step_id}.${row.field_key}`] || row.field_key,
       row.value || '',
       row.done_at ? new Date(row.done_at).toLocaleString() : '',

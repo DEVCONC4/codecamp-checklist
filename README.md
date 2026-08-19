@@ -11,8 +11,9 @@ No framework, no server of your own.
   they go. *Next step* is what stamps a step, and only unlocks once every
   required proof on it is in. All 16 required steps stamped, and a shareable
   project write-up unlocks.
-- **Facilitators** get per-step mentor notes and a live view of the whole room,
-  exportable to Excel.
+- **Facilitators** get per-step mentor notes and a live view of the whole room:
+  who to walk to next, where the room is stuck, and any one person's answers and
+  screenshots on tap. Exportable to Excel.
 
 ---
 
@@ -196,7 +197,7 @@ src/
 ├── record.js       My project — review sheet, unlock panel, downloads
 ├── share.js        the share sheet — post text + the documentation file
 ├── doc.js          the two exports (portfolio write-up, progress report)
-├── facilitator.js  the room + Excel export
+├── facilitator.js  the desk — alerts, the room, one participant, Excel export
 ├── ui.js           $, esc, toast, the stamp, image downscaling
 └── main.js         auth, tabs, boot
 ```
@@ -278,9 +279,12 @@ every step, finished or not. This exists because the write-up is gated on
 finishing, and the people who stall in Level 2 are exactly the ones whose data is
 most useful. Nobody leaves with nothing to hand in.
 
-**Excel** (facilitator) has two sheets. *Roster* is one row per participant.
+**Excel** (facilitator) has two sheets. *Roster* is one row per participant,
+including *Last activity* and a *Flags* column carrying the same tags the desk
+shows — so the follow-up list of keys to rotate survives the room emptying.
 *Submissions* is one row per field per participant, which pivots easily. If
-SheetJS fails to load it falls back to CSV.
+SheetJS fails to load it falls back to CSV. Facilitators' own rows are excluded
+from both sheets: staff answers are test data.
 
 A privacy split is enforced: `const PRIVATE = ['h4d']` keeps the wrap-up out of
 the public write-up. Pace ratings and "anything we should change" are facilitator
@@ -288,6 +292,60 @@ feedback, not portfolio material — they still reach Excel and the progress
 report. The one exception is `h4d.hardest`, which surfaces in *What I learned*
 because it reads as genuine reflection. **Preserve this distinction:** anything
 internal, route to Excel only.
+
+### The facilitator desk
+
+Three questions, in the order a facilitator actually asks them.
+
+**Who needs me right now.** Two signals, both at the top of the desk. The
+**alerts strip** turns specific answers into a reason to walk over. The one that
+matters most is `h4b.keywhere` = *In a file in my repo*: a live API key is
+already public and needs **rotating**, not moving. Nothing gates on that answer
+by design — an honest answer beats a gate people learn to click past — so the
+desk shouts about it instead. Each alert names who, and tapping a name opens
+them. The others are the CORS dead-end (`p2.restarted` = *Not yet*), publishing
+without a key, and anyone who says in the wrap-up that they never got it working.
+Adding one is a row in the `ALERTS` table in `facilitator.js`.
+
+The **quiet column** is time since a participant's last write, from
+`v_roster.last_activity_at` and falling back to signup — so somebody who has
+typed nothing since they walked in is the loudest row rather than an empty one.
+It is coloured against the step they are actually on, not a flat number:
+`camp.js` budgets steps between 5 and 25 minutes, so the thresholds are that
+budget and 1.5× it, with floors of 8 and 15 minutes. Ten quiet minutes on the
+CORS one-liner is someone stuck; the same ten on *Deploy to Vercel* is someone
+working. The roster sorts by need by default — unfinished first, longest silence
+first — with Name and Progress a tap away, because alphabetical is the one
+ordering that carries no information and you still sometimes need to find one
+person by name.
+
+**Where the room is stuck.** One bar per step, counting who has stamped it. The
+biggest drop between two consecutive steps gets a marker, *unless* that drop is
+the same step the *Most are at* tile already names: counts only ever fall, so
+mid-camp the two usually coincide and marking it would restate the tile. It
+fires on the case worth seeing — a step people reached and could not get past
+while others moved on.
+
+**What one person is looking at.** Tapping any row opens their record: every
+answer, every screenshot, and their fork, repo and live URL as links. RLS and the
+`proofs` storage policy already permit this, so the desk reuses `signedUrls()`
+from `store.js` rather than growing a second implementation. Enough to debug a
+broken deploy from the front of the room instead of leaning over a keyboard.
+Hand-typed URLs get a scheme check before they become an `href`, and a bare
+`your-ai.vercel.app` gets `https://` prepended, since that is what the field hint
+asks for.
+
+Two things the desk deliberately does not read from `v_roster`. Progress comes
+off the `progress` table so the count matches the participant's own rail
+(required steps only), and the step someone is on is derived from *which* steps
+are stamped rather than from how many — people skip one and come back, and a
+count read as a position puts them further along than they are.
+
+The desk is built to be used on a phone, because that is what a facilitator is
+holding while walking the room: every roster row folds into four short lines at
+360px, and the masthead gives up a line so the list gets the screen.
+
+Nothing on the desk writes. It reads the room and says where to walk.
 
 ### Sharing
 
@@ -391,7 +449,10 @@ operations, **the app wins** — this is a companion to it, not a replacement.
 3. **Screenshots soften at 1280px / 0.72.** Fine for chat UIs, occasionally lossy
    on small terminal text. Raise it in `shrink()` if legibility complaints appear.
 4. **Realtime needs `0002`.** Without that migration the desk shows "Manual
-   refresh" and updates only when you press the button.
+   refresh" and refetches on a 30-second timer instead of on change — slower to
+   notice a stamp, but not dependent on the Refresh button. With realtime on, the
+   same timer re-renders without refetching, because how long someone has been
+   quiet changes while nothing happens.
 5. **Email confirmation.** Leave it on and signups fail with a rate-limit error
    — `429 over_email_send_rate_limit`, shown as *"Too many attempts just now"* —
    after roughly the second account, because Supabase is trying to mail every

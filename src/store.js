@@ -75,7 +75,10 @@ export async function loadAll(userId) {
 // One batched call rather than one round trip per image.
 // Never throws. A thumbnail that can't be signed is a missing image; it must
 // not be able to abort an upload or block the participant from stamping.
-async function signedUrls(paths, expiresIn = 60 * 60 * 4) {
+// Exported because the desk signs other people's proofs with it — the storage
+// policy lets a facilitator read any object in the bucket, so the same batched
+// call works there without a second implementation.
+export async function signedUrls(paths, expiresIn = 60 * 60 * 4) {
   if (!paths.length) return {};
   try {
     const { data, error } = await supabase.storage.from(PROOF_BUCKET).createSignedUrls(paths, expiresIn);

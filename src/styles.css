@@ -11,6 +11,8 @@
   --stamp-tint:#D9E6DF;
   --flag:#B8244A;
   --flag-tint:#F2DCE2;
+  --warn:#9A5B12;
+  --warn-tint:#EFE3D0;
   --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
   --body:'Newsreader',Georgia,serif;
   --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
@@ -263,8 +265,10 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .key{border:1.5px dashed var(--ink);border-radius:5px;padding:15px 17px;margin-top:22px;background:var(--panel-2)}
 .key .eyebrow{display:block;margin-bottom:6px}
 .key p{margin:0;font-size:15.5px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;background:var(--rule);border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;margin-top:24px}
-.stats div{background:var(--panel);padding:16px 18px}
+/* Flex, not grid: when six tiles wrap to a second row the leftovers stretch to
+   fill it, instead of leaving a bare strip of the gap colour showing. */
+.stats{display:flex;flex-wrap:wrap;gap:2px;background:var(--rule);border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;margin-top:24px}
+.stats div{background:var(--panel);padding:16px 18px;flex:1 1 150px}
 .stats dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
 .stats dd{margin:4px 0 0;font-family:var(--display);font-size:26px;font-weight:700}
 .livepill{display:inline-flex;align-items:center;gap:6px;margin-top:18px;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:3px;background:var(--panel-2);color:var(--ink-faint)}
@@ -274,13 +278,67 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .livepill.wait i{opacity:.5}
 @keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.livepill.on i{animation:none}}
-.roster{margin:24px 0 0;border-top:1.5px solid var(--ink)}
-.rline{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);font-size:15px;flex-wrap:wrap}
-.rline .nm{font-family:var(--display);font-weight:700;font-size:15px;min-width:170px}
+.stats dd.sm{font-size:15px;line-height:1.35}
+.stats dd.bad{color:var(--flag)}
+
+/* answers that mean "walk over there" */
+.alerts{display:grid;gap:10px;margin-top:20px}
+.alerts.tight{margin:16px 0 0}
+.alert{border:1.5px solid var(--warn);border-left-width:5px;border-radius:5px;background:var(--warn-tint);padding:13px 16px}
+.alert.bad{border-color:var(--flag);background:var(--flag-tint)}
+.alert>.eyebrow{display:block;color:var(--warn)}
+.alert.bad>.eyebrow{color:var(--flag)}
+.alert strong{display:block;font-family:var(--display);font-size:16px;margin:4px 0 3px}
+.alert p{margin:0;font-size:15px;color:var(--ink-soft);max-width:60ch}
+.alert .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.chip{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--paper);border:1.5px solid var(--ink);border-radius:3px;padding:6px 10px;cursor:pointer;color:var(--ink)}
+.chip:hover{background:var(--ink);color:var(--paper)}
+
+/* stamped-per-step, so the wall is visible from the front of the room */
+.wall{margin-top:24px;border:1.5px solid var(--ink);border-radius:6px;background:var(--panel);padding:18px 20px}
+.wall>.eyebrow{display:block;margin-bottom:12px}
+.wrow{display:flex;align-items:center;gap:11px;padding:4px 0}
+.wrow .wn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-faint);width:22px;flex:none}
+.wrow .wt{font-size:14.5px;flex:0 1 250px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow .wtag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flag);border:1.5px solid var(--flag);border-radius:3px;padding:2px 6px;flex:none}
+.wrow .wbar{flex:1 1 auto;min-width:56px;height:9px;background:var(--panel-2);border-radius:2px;overflow:hidden}
+.wrow .wbar i{display:block;height:100%;background:var(--stamp)}
+.wrow .wc{font-family:var(--mono);font-size:11px;color:var(--ink-soft);width:54px;text-align:right;flex:none}
+.wrow.drop{border-top:1.5px dashed var(--flag);margin-top:4px;padding-top:8px}
+.wrow.drop .wbar i{background:var(--flag)}
+
+/* roster */
+.rosterhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+.rosterhead .sp{margin-left:auto}
+.segs{display:flex;gap:2px;background:var(--panel-2);padding:3px;border-radius:4px}
+.seg{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:none;border:0;border-radius:3px;padding:6px 9px;cursor:pointer;color:var(--ink-soft)}
+.seg[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.roster{margin:10px 0 0;border-top:1.5px solid var(--ink)}
+.deskfoot{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin:12px 0 0}
+.rline{display:flex;width:100%;gap:12px;align-items:center;padding:11px 6px 11px 0;border:0;border-bottom:1px solid var(--rule);background:none;color:inherit;font-family:var(--body);font-size:15px;text-align:left;cursor:pointer}
+.rline:hover{background:var(--panel)}
+.rline:focus-visible{outline:2px solid var(--stamp);outline-offset:-2px}
+.rline.hot{box-shadow:inset 3px 0 0 var(--flag)}
+.rline .nm{font-family:var(--display);font-weight:700;font-size:15px;min-width:150px}
 .rline .mt{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase}
+.rline .nx{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);flex:0 1 230px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rline .sp{margin-left:auto}
-.minirail{width:110px;height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden}
+.rline .idle{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);min-width:92px;text-align:right;flex:none}
+.rline .idle.warn{color:var(--warn);font-weight:700}
+.rline .idle.bad{color:var(--flag);font-weight:700}
+.rflags{display:flex;gap:5px;flex:none}
+.rflags:empty{display:none}
+.rflag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 6px;border-radius:3px;background:var(--warn-tint);color:var(--warn);white-space:nowrap}
+.rflag.bad{background:var(--flag-tint);color:var(--flag)}
+.minirail{width:110px;height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;flex:none}
 .minirail i{display:block;height:100%;background:var(--stamp)}
+
+/* one participant, opened over the desk */
+.plinks{display:grid;gap:8px;margin:16px 0 4px}
+.plinks a,.plinks .dead{display:block;font-family:var(--mono);font-size:12.5px;word-break:break-all;border:1.5px solid var(--rule);border-radius:4px;padding:9px 12px;background:var(--panel);text-decoration:none;color:var(--stamp)}
+.plinks a:hover{border-color:var(--stamp)}
+.plinks .dead{color:var(--ink-faint)}
+.plinks .eyebrow{display:block;margin-bottom:3px}
 
 .empty{border:2px dashed var(--rule);border-radius:6px;padding:44px 24px;text-align:center;color:var(--ink-soft);margin-top:22px}
 .empty .big{font-family:var(--display);font-weight:700;color:var(--ink);font-size:17px;margin-bottom:6px}
@@ -331,4 +389,52 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
   .brand{width:100%}
   .sheet{padding:16px 10px}
   .sheet-in{padding:22px 18px 18px}
+}
+
+/* ---------- the desk on a phone ----------
+   A facilitator walks the room holding a phone, not sitting at a laptop, so
+   the roster has to survive 360px: each row becomes four short lines instead
+   of one wide one, and the header gives up a line so the list gets the screen. */
+@media (max-width:760px){
+  .brand{width:auto;margin-right:auto}
+  .brand h1{font-size:16px}
+  .brand .code{display:none}
+  .tabs{order:3;width:100%;justify-content:space-between}
+  .tab{flex:1;text-align:center;padding:8px 4px;font-size:10px;letter-spacing:.06em}
+
+  .section-head{padding-top:24px}
+  .section-head .tools{margin-left:0;width:100%}
+  .section-head .tools .btn{flex:1}
+
+  .stats{margin-top:18px}
+  .stats div{padding:13px 14px;flex:1 1 120px}
+  .stats dd{font-size:22px}
+  .stats dd.sm{font-size:13.5px}
+
+  .wall{padding:15px 14px}
+  .wrow{flex-wrap:wrap;gap:6px 9px;padding:7px 0;border-bottom:1px solid var(--rule)}
+  .wrow:last-child{border-bottom:0}
+  .wrow .wt{flex:1 1 auto;white-space:normal}
+  .wrow .wc{width:auto}
+  .wrow .wbar{flex:1 1 100%;order:5}
+
+  .rosterhead{margin-top:22px}
+  .rosterhead .sp{display:none}
+  .segs{width:100%}
+  .seg{flex:1}
+
+  /* Wraps into: name · steps / progress bar / next step / flags · quiet.
+     Ordered rather than laid out on a grid so a row with no flags on it, or
+     two, keeps the same shape. */
+  .rline{flex-wrap:wrap;row-gap:7px;align-items:center;padding:14px 6px 14px 9px}
+  .rline .nm{order:1;flex:1 1 auto;min-width:0;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rline .ct{order:2;margin-left:auto;flex:none}
+  .rline .minirail{order:3;flex:1 1 100%;width:auto;height:7px}
+  .rline .nx{order:4;flex:1 1 100%}
+  .rline .rflags{order:5}
+  .rline .os{order:6}
+  .rline .idle{order:7;margin-left:auto;min-width:0}
+  .rline .sp{display:none}
+
+  .plinks a,.plinks .dead{font-size:12px}
 }

@@ -504,20 +504,47 @@ git push">Copy</button></div>`,
           title: 'Deploy to Vercel and add your key',
           minutes: 25,
           body: `
-            <p>On Vercel: <strong>Add New → Project</strong>, pick your repo, click <strong>Deploy</strong>. No config needed.</p>
-            <p>Visitors can't reach the Ollama on your laptop, so the live copy borrows a hosted model. Get a free key at <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a> — no card needed. Then on your project, go to <strong>Settings → Environment Variables</strong>, add <code>MODEL_API_KEY</code>, and <strong>Redeploy</strong>.</p>
-            <ul>
-              <li><code>MODEL_API_KEY</code> — <strong>required</strong></li>
-              <li><code>MODEL_API_BASE</code> — optional, defaults to the Groq endpoint</li>
-              <li><code>MODEL_NAME</code> — optional, defaults to <code>llama-3.1-8b-instant</code></li>
-            </ul>
+            <p>Two things happen here: your code goes online, then the live copy gets a key so visitors get replies. In that order.</p>
+
+            <h4 class="opthead"><span class="tag">Part 1</span>Put the site online</h4>
+            <ol>
+              <li>Open <a href="https://vercel.com/dashboard" target="_blank" rel="noopener">vercel.com/dashboard</a>, signed in with the same GitHub account your fork lives on.</li>
+              <li>Click <strong>Add New → Project</strong>.</li>
+              <li>Find your fork in the list and click <strong>Import</strong>. Not there? Click <strong>Adjust GitHub App Permissions</strong>, give Vercel access to that repo, come back.</li>
+              <li>Change nothing on the configure screen. The starter needs no config.</li>
+              <li>Click <strong>Deploy</strong>. A minute or two is normal.</li>
+              <li>Click <strong>Visit</strong> to get your live URL — <code>something.vercel.app</code>.</li>
+            </ol>
+            <p>Open it. The site looks like yours, but ask it a question and nothing comes back. That's Part 2.</p>
+
+            <h4 class="opthead"><span class="tag">Part 2</span>Get a free model key</h4>
+            <p>Visitors can't reach the Ollama on your laptop, so the live copy borrows a hosted model. Groq gives one away free — no card, no trial clock.</p>
+            <ol>
+              <li>Open <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a> in a new tab.</li>
+              <li><strong>Sign up</strong> with Google, GitHub, or an email address. There is no payment step — if a screen asks for a card, you're on the wrong site.</li>
+              <li>In the left sidebar of the console, click <strong>API Keys</strong>. On a narrow window that sidebar hides behind the <strong>☰</strong> button at the top-left.</li>
+              <li>Click <strong>Create API Key</strong> and name it anything — <code>codecamp</code> is fine.</li>
+              <li>The key is shown <strong>once</strong>. Copy it somewhere you can reach for the next two minutes. Close that box and it's gone for good — you can only make a new one.</li>
+            </ol>
+            <p>A Groq key starts with <code>gsk_</code>. If what you copied doesn't, you grabbed the wrong thing off the page.</p>
+
+            <h4 class="opthead"><span class="tag">Part 3</span>Give the key to Vercel</h4>
+            <ol>
+              <li>Back in Vercel, open your project → <strong>Settings</strong> → <strong>Environment Variables</strong>.</li>
+              <li>In <strong>Key</strong>, type <code>MODEL_API_KEY</code> — exactly that, capitals and underscore. In <strong>Value</strong>, paste your <code>gsk_…</code> key.</li>
+              <li>Leave it applied to every environment and click <strong>Save</strong>.</li>
+              <li>The part everyone forgets: a new variable doesn't reach a site that's already deployed. Open <strong>Deployments</strong>, click the <strong>⋯</strong> menu on the newest one, choose <strong>Redeploy</strong>.</li>
+              <li>When that finishes, open your live URL and ask your AI something. A reply means the key is in.</li>
+            </ol>
+            <p><code>MODEL_API_KEY</code> is the only variable you need to set, and it pays for exactly one thing: the model writing replies. Groq is only the default because it's free and fast — any other free hosted model works the same way, and the starter has optional settings for the endpoint and model name, so ask a facilitator if you'd rather use one. What matters is that a stranger who opens your link gets an answer back.</p>
+
             <div class="callout"><strong>Never paste a key into a file you commit.</strong> Your repo is public, and keys in public repos get found and drained within hours. <code>my-ai.json</code> is written without any key by design. Use a free-tier or spend-capped key — the proxy caps reply length but has no per-IP rate limit yet, so a public link is a public endpoint backed by your quota.</div>`,
           proofs: [
             { key: 'liveurl', type: 'text', label: 'Your live URL', hint: 'Something like your-ai.vercel.app — open it on your phone before you submit', required: true },
-            { key: 'keywhere', type: 'choice', label: 'Where is your API key stored?', options: ['In Vercel environment variables', 'In a file in my repo', "I haven't added one yet"], required: true },
+            { key: 'keywhere', type: 'choice', label: 'Where did your key end up?', hint: 'A safety check, not a test — every answer moves you on. If the key did land in a file in your repo, saying so is how a facilitator reaches you before a stranger does', options: ['In Vercel environment variables', 'In a file in my repo', "I haven't added one yet"], required: true },
             { key: 'shot', type: 'screenshot', label: 'Your live site in a browser, URL bar visible', required: true },
           ],
-          mentorNote: 'Say the key warning out loud at least twice. If anyone answers ‘in a file in my repo’ on the comprehension check, go to them immediately — the key needs rotating, not just moving. If the room is behind on time, this is the step to protect: get everyone published and pushed, and let the deploy happen after the camp.',
+          mentorNote: 'Say the key warning out loud at least twice. The key question is self-reported and nothing blocks on the answer — deliberately, since an honest ‘in a file in my repo’ beats a gate people learn to click past. Watch the roster for that answer and go straight to them: the key needs rotating, not just moving. If the room is behind on time, this is the step to protect: get everyone published and pushed, and let the deploy happen after the camp.',
         },
         {
           id: 'h4d',
@@ -525,13 +552,19 @@ git push">Copy</button></div>`,
           minutes: 10,
           body: `
             <div class="callout"><strong>Remember which one is the real one.</strong> The shared link runs on somebody else's computer, using a hosted model. The AI on <em>your</em> machine is the one that's free, offline, and private — nobody can meter it, price it, or switch it off. That's the one you actually built today.</div>
-            <p>Tell us how the day went. This genuinely shapes the next camp, and these answers go to the facilitator rather than into your project write-up.</p>`,
+            <p>Tell us how the day went. Four dropdowns are required and the rest is optional — two minutes, and it genuinely shapes the next camp.</p>
+            <p>These answers go to the facilitator, not into your public write-up. The one exception is which level you found hardest, which appears in your write-up under <em>What I learned</em>.</p>`,
           proofs: [
             { key: 'pace', type: 'choice', label: 'How was the pace?', options: ['Too slow', 'About right', 'Too fast'], required: true },
             { key: 'hardest', type: 'choice', label: 'Which level was hardest?', options: ['Pre-install', 'Level 1 — Fork', 'Level 2 — Run it locally', 'Level 3 — Customize', 'Level 4 — Publish'], required: true },
+            { key: 'again', type: 'choice', label: 'Could you build this again tomorrow, on your own?', hint: 'Nobody is marking this — “not yet” is a normal answer after one day, and it tells us which parts to slow down next time', options: ['Yes, from scratch', 'Yes, with this checklist open', 'Not yet — I followed along'], required: true },
+            { key: 'recommend', type: 'choice', label: 'Would you tell a friend to come to the next one?', options: ['Definitely', 'Probably', 'Probably not'], required: true },
+            { key: 'stuck', type: 'choice', label: 'When you got stuck, how long did you stay stuck?', hint: 'How quickly help reached you — this is about us, not you', options: ['Never really got stuck', 'A few minutes', 'Long enough to fall behind', 'I never got it working'], required: false },
+            { key: 'next', type: 'choice', label: 'What happens to your AI after today?', options: ['Keep building on it', 'Leave it up as it is', 'Take it down', 'Not sure yet'], required: false },
+            { key: 'bestbit', type: 'text', label: 'What is the one thing you will remember?', hint: 'A moment, not a review — the bit where something clicked', required: false },
             { key: 'feedback', type: 'longtext', label: 'Anything we should change?', hint: 'Optional, but read by a human', required: false },
           ],
-          mentorNote: 'Collect the pace and hardest-level ratings before people leave the room — response rate drops off a cliff once they’re out the door. The hardest-level answers are your planning data for the next camp; expect Level 2 to win and budget accordingly.',
+          mentorNote: 'Collect this before people leave the room — response rate drops off a cliff once they’re out the door. Hardest level is your planning data for the next camp; expect Level 2 to win and budget accordingly. ‘Could you build this again’ and the stuck question are the two that tell you whether the day taught anything or just got followed: a room that finished but answers ‘not yet’ across the board means the pace was too fast whatever the pace answers say, and ‘long enough to fall behind’ clustering on one level means you were short a facilitator there. Only four of the eight are required, so nobody is trapped at the door.',
         },
       ],
     },
