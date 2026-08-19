@@ -201,8 +201,8 @@ cd <surname>_barangayAI">Copy</button></div>
         },
         {
           id: 'h2c',
-          title: 'Serve the app and send your first message',
-          minutes: 20,
+          title: 'Serve the app in your browser',
+          minutes: 15,
           body: `
             <p>Your first two terminals are busy — one running the server, one running the chat. This is a <strong>third</strong> one, and it opens wherever your computer feels like, so the first thing to do is walk it to the project folder.</p>
 
@@ -256,30 +256,79 @@ cd <surname>_barangayAI">Copy</button></div>
                   <p>While you're looking around: <strong>Sources</strong> in the sidebar already has a document loaded — reference material your AI can quote from on day one.</p>
                 </div>
               </li>
+            </ol>
 
-              <li>
-                <p>Pick your model in the model picker, type <strong>"Kumusta!"</strong>, and watch it reply word by word.</p>
-                <div class="callout">Nothing is selected by default — you have to choose a model after the app discovers what Ollama has. That's deliberate.</div>
-              </li>
-            </ol>`,
+            <div class="callout">Nothing is selected in the model picker by default — you have to tell the app where a model lives and then choose one. That's the next step, and it's deliberate.</div>`,
           proofs: [
-            { key: 'selected', type: 'text', label: 'Which model did you select in the app?', required: true },
-            { key: 'shot', type: 'screenshot', label: 'The app replying, with the green status chip visible', required: true },
+            { key: 'shot', type: 'screenshot', label: 'The app open at localhost, with the status chip visible', required: true },
           ],
-          mentorNote: 'Add ‘which folder is that terminal in?’ to the triage list — a third terminal opens at home, and a server started from the wrong folder shows a file listing rather than an error, so it reads as a broken app. Blank page or scripts not loading means they opened it via file:// — serve it properly. ‘No models found’ means either Ollama isn’t running or the wrong instance is; have them open http://localhost:11434/v1/models directly in the browser, which answers both questions at once. Expect ‘the setup box keeps coming back’ — the welcome wizard opens on every reload by design. Say it once to the room and you won’t answer it thirty times.',
+          mentorNote: 'Add ‘which folder is that terminal in?’ to the triage list — a third terminal opens at home, and a server started from the wrong folder shows a file listing rather than an error, so it reads as a broken app. Blank page or scripts not loading means they opened it via file:// — serve it properly. Expect ‘the setup box keeps coming back’ — the welcome wizard opens on every reload by design. Say it once to the room and you won’t answer it thirty times. The empty model picker is the next step, not a fault; hold that question until then.',
         },
         {
           id: 'h2d',
-          title: 'Optional — connect a cloud model',
-          minutes: 10,
+          title: 'Connect a model — local or cloud',
+          minutes: 15,
           body: `
-            <p>Only if you want a second option, or your machine can't run a local model comfortably. Open the model picker at the bottom of the chat and click <strong>Add Models</strong>.</p>
-            <p>The dialog has a <strong>LOCAL</strong> card for Ollama and an <strong>API</strong> card for a cloud provider. Any OpenAI-compatible endpoint works, which is why one dialog fits them all. Pick a provider — DeepSeek, OpenAI, Together, Groq, or Custom — and the endpoint URL auto-fills. Paste your key, click <strong>Test</strong>, then <strong>Add</strong>.</p>
-            <div class="callout">Anything you add here is saved <strong>in this browser only</strong>. It makes your copy work, not your published one — the live site gets its model from a Vercel environment variable in Hour 4.</div>`,
+            <p>The picker is empty because the app doesn't guess. You tell it where a model lives, and one dialog takes both answers: <strong>Ollama on your own machine</strong>, or a <strong>cloud provider</strong> over the internet. Any OpenAI-compatible endpoint works, which is why one dialog fits them all.</p>
+            <p>Open the model picker at the bottom of the chat and click <strong>Add Models</strong>. Everyone does the local card — free, offline, private, and the point of the camp. Do the API card as well only if you want a second option, or if your machine can't run a local model comfortably.</p>
+
+            <ol class="acts">
+              <li>
+                <p>Read the two cards before typing anything.</p>
+                <div class="lesson">
+                  <span class="tag">Which card</span>
+                  <p><strong>LOCAL</strong> is for Ollama on this machine. <strong>API</strong> is for a cloud provider, and needs a key. Both end up as an endpoint in the same list, and the chat treats them identically once they're added.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Paste your Ollama endpoint into the URL field on the LOCAL card, leave the key field empty, and click <strong>Add</strong>.</p>
+                <div class="codeblock"><pre>http://localhost:11434/v1</pre><button class="copy" data-copy="http://localhost:11434/v1">Copy</button></div>
+                <div class="lesson">
+                  <span class="tag">The key field</span>
+                  <p>The API key box on the LOCAL card is optional — it's there for protected local endpoints, which yours isn't. Leave it blank. The <strong>Quickstart</strong> panel inside that card repeats the Ollama commands from earlier in the hour if you need them again, including <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Cloud only — on the API card, pick a provider from the dropdown: <strong>DeepSeek</strong>, <strong>OpenAI</strong>, <strong>Together</strong>, <strong>Groq</strong> or <strong>Custom</strong>. Choosing one auto-fills the endpoint URL for you.</p>
+                <div class="codeblock"><pre>https://api.deepseek.com/v1</pre><button class="copy" data-copy="https://api.deepseek.com/v1">Copy</button></div>
+                <div class="lesson">
+                  <span class="tag">Custom</span>
+                  <p>Pick <strong>Custom</strong> when your provider isn't in the list, and paste its base URL yourself. It has to be the OpenAI-compatible base — the part that ends in <code>/v1</code> — not a full chat URL copied out of the browser.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Cloud only — get a key from the provider's own dashboard and paste it into the <strong>API key</strong> field.</p>
+                <div class="callout"><strong>The key is stored in this browser only.</strong> It is never written into a file and never committed to your repo. Use a free-tier or spend-capped key, and don't put one on a projector or in a group chat — a shared key is a drained quota by lunch.</div>
+              </li>
+
+              <li>
+                <p>Click <strong>Test</strong>, and then <strong>Add</strong>.</p>
+                <div class="lesson">
+                  <span class="tag">What each button does</span>
+                  <p><strong>Test</strong> pings <code>/models</code> on the endpoint, so it answers exactly one question: can the browser reach it at all. <strong>Add</strong> then auto-discovers every model that endpoint offers and lists them for you. If a provider hides its model list, the app falls back to a sensible default — <code>deepseek-chat</code>, <code>gpt-4o-mini</code> — which is not an error.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Open the picker again, choose your model, type <strong>"Kumusta!"</strong>, and watch it reply word by word.</p>
+                <div class="lesson">
+                  <span class="tag">Reading the chip</span>
+                  <p>The status chip at the top right now names the model you chose instead of just reading <strong>Ollama</strong>. That is your confirmation the endpoint and the selection both took. Added endpoints stay in the picker, so you can switch between local and cloud mid-conversation and compare the answers.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div class="callout">Everything you add here is saved <strong>in this browser only</strong>. It makes <em>your</em> copy work, not your published one — the live site gets its model from a Vercel environment variable instead, which you set in Hour 4.</div>`,
           proofs: [
-            { key: 'provider', type: 'choice', label: 'Did you add one?', options: ['Groq', 'DeepSeek', 'OpenAI', 'Together', 'Custom endpoint', 'Skipped — local is enough'], required: false },
+            { key: 'card', type: 'choice', label: 'Which card did you use?', hint: 'Local is the camp default — pick Both only if you added a cloud endpoint as well', options: ['LOCAL — Ollama on my machine', 'API — a cloud provider', 'Both'], required: true },
+            { key: 'provider', type: 'choice', label: 'If you used the API card, which provider?', options: ['Groq', 'DeepSeek', 'OpenAI', 'Together', 'Custom endpoint', 'Local only — no cloud provider'], required: false },
+            { key: 'selected', type: 'text', label: 'Which model did you select in the app?', required: true },
+            { key: 'shot', type: 'screenshot', label: 'The app replying, with the status chip naming your model', required: true },
           ],
-          mentorNote: 'This is the fallback for machines that can’t run anything locally — small models still fail on the very oldest hardware. The other fallback is pairing them with a neighbor. Either way, name the trade out loud: they finish the build but miss the local-first point, and can run it locally later.',
+          mentorNote: 'This is where the room splits, so stand up and watch it. ‘No models found’, or a Test that fails, means either Ollama isn’t running or the browser can’t reach it — have them open http://localhost:11434/v1/models directly, which answers both questions at once. The API card is the fallback for machines that can’t run anything locally; the very oldest hardware fails even on small models, and pairing them with a neighbour is the other fallback. Name the trade out loud: they finish the build but miss the local-first point, and can run it locally later. Have one spend-capped key of your own ready for the two or three who arrive without one, and revoke it after the camp.',
         },
       ],
     },

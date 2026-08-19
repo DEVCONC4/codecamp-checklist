@@ -9,7 +9,7 @@ No framework, no server of your own.
 
 - **Participants** work 16 steps in order, submitting answers and screenshots as
   they go. *Next step* is what stamps a step, and only unlocks once every
-  required proof on it is in. All 15 required steps stamped, and a shareable
+  required proof on it is in. All 16 required steps stamped, and a shareable
   project write-up unlocks.
 - **Facilitators** get per-step mentor notes and a live view of the whole room,
   exportable to Excel.
@@ -214,7 +214,11 @@ optional: !s.proofs.some(p => p.required)
 
 A step with no required proof drops out of the completion gate automatically and
 renders a dashed sidebar dot. The consequence worth remembering: strip the last
-`required: true` proof from a step and it silently stops counting toward the 15.
+`required: true` proof from a step and it silently stops counting toward the 16.
+
+No step is optional right now: the old optional cloud-model step became required
+when the connect-a-model walkthrough absorbed it, so all 16 count. The *Skip this
+step* path is live code that nothing currently exercises.
 
 Step IDs are load-bearing — `doc.js` and `facilitator.js` look up specific
 fields by `stepId.key`, so renaming one means updating those lookups.
@@ -327,10 +331,10 @@ bucket. The first path segment is the owner, which is what every storage policy
 keys off. Paste is refused on a step that has not opened yet — see *Stamping, and
 the order steps open in*.
 
-Only 7 of the 16 steps take a screenshot: `p1`, `p3`, `h2a`, `h2c`, `h3a`,
-`h4a`, `h4b`. The rule is that an image earns its place when it shows something
-no field can assert — a URL you can click is better evidence than a photo of a
-page.
+Only 8 of the 16 steps take a screenshot: `p1`, `p3`, `h2a`, `h2c`, `h2d`,
+`h3a`, `h4a`, `h4b`. The rule is that an image earns its place when it shows
+something no field can assert — a URL you can click is better evidence than a
+photo of a page.
 
 ---
 

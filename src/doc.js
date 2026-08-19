@@ -23,7 +23,7 @@ export async function buildDoc() {
   const me = store.profile;
   const pics = await allInlined();
   const ai = V('h3a', 'ainame') || 'My AI';
-  const model = V('p1', 'model') || V('h2c', 'selected') || 'an open-source model';
+  const model = V('p1', 'model') || V('h2d', 'selected') || V('h2c', 'selected') || 'an open-source model';
   const lang = V('h3b', 'lang') || 'English';
   const file = V('h3c', 'file');
   const live = V('h4b', 'liveurl');
