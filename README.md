@@ -41,6 +41,10 @@ that and puts login back on plain email + password. Both are listed because the
 pair is what a project applying migrations in order will run — starting fresh,
 the state you end up in is the same either way.
 
+Then [`0006_fix_role_promotion.sql`](supabase/migrations/0006_fix_role_promotion.sql),
+which lets you promote your own facilitator account in step 6 — without it that
+promotion silently reverts.
+
 Finally, [`0002_realtime.sql`](supabase/migrations/0002_realtime.sql) to make the
 facilitator room update live. It's optional — skip it and the desk falls back to
 its Refresh button, showing "Manual refresh" instead of "Live". It doesn't widen
@@ -157,6 +161,27 @@ update public.profiles set role = 'facilitator' where email = 'you@example.com';
 
 Sign out and back in. A **Facilitator** tab appears, and mentor notes start
 showing inline under each step.
+
+> **If the role snaps back to `participant`**, you are on a project that never
+> got [`0006_fix_role_promotion.sql`](supabase/migrations/0006_fix_role_promotion.sql).
+> Run it and try again. Before that migration the `freeze_role` trigger reverted
+> any role change not made by an existing facilitator — and `auth.uid()` is null
+> in the SQL Editor, so it caught the one promotion that has to work there. It
+> fails silently: the statement reports success and the row is unchanged, which
+> is what makes it worth naming here. Admin is no way around it either, since
+> `service_role` bypasses RLS but not triggers.
+>
+> To promote without applying `0006`, take the trigger out of the way for the
+> one statement:
+>
+> ```sql
+> alter table public.profiles disable trigger profiles_freeze_role;
+> update public.profiles set role = 'facilitator' where email = 'you@example.com';
+> alter table public.profiles enable trigger profiles_freeze_role;
+> ```
+>
+> Run all three together, and don't leave it disabled — that trigger is what
+> stops a participant promoting themselves.
 
 ---
 
