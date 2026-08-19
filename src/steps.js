@@ -1,6 +1,7 @@
 import { CAMP, STEPS, REQ, TOTAL, stepById, stepNumber } from './camp.js';
 import { store, V, SH, doneCount, allDone, isFacilitator, setValue, setDone, addScreenshots, removeScreenshot } from './store.js';
 import { $, $$, esc, toast, stampHTML, zoom } from './ui.js';
+import { show } from './main.js';
 
 let current = STEPS[0].id;
 export const currentStep = () => current;
@@ -129,7 +130,9 @@ export function renderStep() {
       ${s.proofs.map((p) => fieldHTML(s, p)).join('')}
       <div class="actions">
         <button class="btn btn-primary" id="doneBtn">${st.done ? 'Unstamp this step' : 'Stamp complete'}</button>
-        ${i < STEPS.length - 1 ? '<button class="btn btn-ghost" id="nextBtn">Next step →</button>' : ''}
+        ${i < STEPS.length - 1
+          ? '<button class="btn btn-ghost" id="nextBtn">Next step →</button>'
+          : `<button class="btn ${allDone() ? 'btn-primary' : 'btn-ghost'}" id="finishBtn">Finish →</button>`}
         <span class="missing" id="missingOut"></span>
       </div>
       ${st.done ? `<div style="margin-top:22px;text-align:right">${stampHTML(num, st.doneAt)}</div>` : ''}
@@ -196,6 +199,11 @@ function wireStep(s) {
     }
   });
 
+  // The last step ends nowhere useful, so it hands over to My project — where
+  // the documentation, the share sheet and the progress report all live.
+  const fb = $('#finishBtn');
+  if (fb) fb.addEventListener('click', finish);
+
   const nb = $('#nextBtn');
   if (nb) {
     nb.addEventListener('click', () => {
@@ -203,6 +211,16 @@ function wireStep(s) {
       goTo(STEPS[Math.min(i + 1, STEPS.length - 1)].id);
     });
   }
+}
+
+function finish() {
+  show('record');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast(
+    allDone()
+      ? `All ${TOTAL} steps stamped — download your documentation or share it from here`
+      : 'Everything you have submitted so far — your write-up unlocks once every step is stamped',
+  );
 }
 
 async function upload(s, key, files) {

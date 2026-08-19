@@ -167,6 +167,7 @@ src/
 ├── store.js        the only module that talks to Postgres and Storage
 ├── steps.js        the working surface: prose, proofs, stamping
 ├── record.js       My project — review sheet, unlock panel, downloads
+├── share.js        the share sheet — post text + the documentation file
 ├── doc.js          the two exports (portfolio write-up, progress report)
 ├── facilitator.js  the room + Excel export
 ├── ui.js           $, esc, toast, the stamp, image downscaling
@@ -225,6 +226,38 @@ feedback, not portfolio material — they still reach Excel and the progress
 report. The one exception is `h4d.hardest`, which surfaces in *What I learned*
 because it reads as genuine reflection. **Preserve this distinction:** anything
 internal, route to Excel only.
+
+### Sharing
+
+The **Share** button on *My project* opens one sheet for every platform, rather
+than a LinkedIn-only clipboard copy. The post text is editable, and the
+documentation file travels with it: on browsers that support sharing files it
+goes out attached through `navigator.share`, and everywhere else it saves to
+Downloads the moment a platform is picked, because neither LinkedIn nor Facebook
+accepts an attachment through a share URL.
+
+The file is built when the sheet **opens**, not when a platform is picked, and
+the tiles stay disabled until it is ready. That ordering is load-bearing:
+inlining a dozen screenshots takes seconds, and both `navigator.share` and
+`window.open` are refused once the click that triggered them no longer counts as
+user activation. For the same reason `openOn` is synchronous — clipboard first
+while the page still has focus, composer last. It is rebuilt for every opening,
+never cached across them, or an edited answer would share a stale write-up.
+
+Facebook is the one tile that needs a link, since its sharer takes a URL and
+nothing else; it falls back to the repo when there is no Vercel URL yet. X gets
+the post trimmed to 280 at a word boundary.
+
+Adding a platform is one entry in `PLATFORMS` in `src/share.js`: a label, a note
+and an `href(text, url)`.
+
+### Finishing
+
+The last step (`h4d`) ends with **Finish →** instead of *Next step*, which hands
+over to *My project* — where the documentation, the share sheet and the progress
+report all live. It is deliberately not gated on 15/15: someone who has not
+finished still lands on the page that tells them what is left, and their
+progress report is downloadable from there either way.
 
 ### Screenshots
 

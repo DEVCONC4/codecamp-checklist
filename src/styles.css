@@ -195,6 +195,30 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .empty{border:2px dashed var(--rule);border-radius:6px;padding:44px 24px;text-align:center;color:var(--ink-soft);margin-top:22px}
 .empty .big{font-family:var(--display);font-weight:700;color:var(--ink);font-size:17px;margin-bottom:6px}
 
+/* ---------- share sheet ---------- */
+.sheet{position:fixed;inset:0;background:rgba(23,33,28,.82);z-index:92;display:flex;align-items:flex-start;justify-content:center;padding:34px 18px;overflow-y:auto}
+.sheet-in{position:relative;width:100%;max-width:600px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:28px 28px 22px;box-shadow:0 30px 70px -30px rgba(23,33,28,.8)}
+.sheet-in h3{font-size:22px;margin:6px 0 8px}
+.sheet-x{position:absolute;top:12px;right:12px;width:28px;height:28px;border:1.5px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1}
+.sheet-x:hover{border-color:var(--ink);color:var(--ink)}
+.sheet-lede{margin:0 0 20px;font-size:15px;color:var(--ink-soft)}
+.sheet-in textarea{font-family:var(--mono);font-size:12.5px;line-height:1.7}
+.sharefile{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1.5px solid var(--stamp);border-radius:5px;background:var(--stamp-tint);padding:14px 16px}
+.sharefile .grow{flex:1;min-width:210px}
+.sharefile strong{display:block;font-size:12px;word-break:break-all;margin:4px 0 3px}
+.sharefile small{display:block;font-size:13px;color:var(--ink-soft)}
+.sharefile.bad{border-color:var(--flag);background:var(--flag-tint)}
+.sharefile.bad small{color:var(--flag)}
+.eyebrow.shareto{display:block;margin:22px 0 10px}
+.sharegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+.stile{text-align:left;background:var(--panel);border:1.5px solid var(--rule);border-radius:5px;padding:11px 13px;cursor:pointer;transition:.15s}
+.stile:hover{border-color:var(--ink);background:var(--panel-2)}
+.stile:disabled{opacity:.55;cursor:default}
+.stile strong{display:block;font-family:var(--display);font-size:14.5px}
+.stile small{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
+.sheet-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--rule)}
+.sheet-foot .sp{margin-left:auto}
+
 .lightbox{position:fixed;inset:0;background:rgba(23,33,28,.9);display:grid;place-items:center;z-index:90;padding:28px;cursor:zoom-out}
 .lightbox img{max-width:100%;max-height:100%;border-radius:4px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:95;background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:5px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;box-shadow:0 8px 30px -10px rgba(0,0,0,.6);max-width:88vw;text-align:center}
@@ -215,4 +239,6 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
   .masthead-in{padding:12px 16px;gap:12px}
   .wrap{padding:0 16px 70px}
   .brand{width:100%}
+  .sheet{padding:16px 10px}
+  .sheet-in{padding:22px 18px 18px}
 }
