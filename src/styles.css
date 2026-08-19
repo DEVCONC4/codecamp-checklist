@@ -88,6 +88,9 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .snav.done .dot{background:var(--stamp);border-color:var(--stamp);color:#fff}
 .snav.done{color:var(--ink-faint)}
 .snav.opt .dot{border-style:dashed}
+/* Shut, not hidden: reading ahead is encouraged, submitting ahead is not. */
+.snav.shut{opacity:.56}
+.snav.shut .dot{border-style:dotted}
 
 /* step panel */
 .step-head{border-bottom:1.5px solid var(--ink);padding-bottom:18px;margin-bottom:24px}
@@ -96,6 +99,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .pill{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:3px;background:var(--panel-2);color:var(--ink-soft)}
 .pill.on-stamp{background:var(--stamp-tint);color:var(--stamp)}
 .pill.on-dash{background:transparent;border:1.5px dashed var(--rule)}
+.pill.on-flag{background:var(--flag-tint);color:var(--flag)}
 .prose{max-width:66ch;font-size:17.5px}
 .prose p{margin:0 0 15px}
 .prose ul,.prose ol{margin:0 0 15px;padding-left:22px}
@@ -126,6 +130,14 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .req{color:var(--flag);font-family:var(--mono);font-size:10px;letter-spacing:.1em;margin-left:6px}
 .actions{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1.5px solid var(--rule)}
 .missing{font-size:14px;color:var(--flag);font-style:italic;margin-left:auto;text-align:right}
+
+/* preview of a step that hasn't opened yet */
+.shutwrap{position:relative}
+.prooffields[inert]{filter:blur(1.7px) saturate(.55);opacity:.55;user-select:none}
+.lockpanel{position:absolute;inset:-8px;display:grid;place-items:start center;padding:18px 12px;background:rgba(228,231,222,.5)}
+.lockpanel>div{max-width:46ch;text-align:center;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:20px 22px;box-shadow:var(--shadow)}
+.lockpanel h3{font-size:19px;margin:6px 0 8px}
+.lockpanel p{margin:0 0 16px;font-size:15px;color:var(--ink-soft)}
 
 /* ---------- THE STAMP ---------- */
 .stamp{display:inline-block;border:2.5px solid var(--stamp);color:var(--stamp);border-radius:6px;padding:8px 14px 7px;transform:rotate(-3.2deg);font-family:var(--mono);text-align:center;background:transparent;box-shadow:inset 0 0 0 1px var(--stamp);opacity:.92}

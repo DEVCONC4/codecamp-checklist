@@ -7,8 +7,10 @@ structured proof-of-completion capture on the other.
 Vite + vanilla JS on the front, Supabase (Postgres + Auth + Storage) behind it.
 No framework, no server of your own.
 
-- **Participants** work 16 steps, submitting answers and screenshots as they go.
-  Stamp all 15 required steps and a shareable project write-up unlocks.
+- **Participants** work 16 steps in order, submitting answers and screenshots as
+  they go. *Next step* is what stamps a step, and only unlocks once every
+  required proof on it is in. All 15 required steps stamped, and a shareable
+  project write-up unlocks.
 - **Facilitators** get per-step mentor notes and a live view of the whole room,
   exportable to Excel.
 
@@ -205,6 +207,36 @@ Three proof fields are deliberately comprehension checks rather than data entry:
 Design new fields the same way: prefer a question that can't be answered without
 doing the thing.
 
+### Stamping, and the order steps open in
+
+**Nobody stamps their own step.** There is one button on a step and it does both
+jobs: *Next step* checks every required proof, stamps the step, plays the stamp,
+then moves on. It stays disabled while anything required is missing, and
+`#missingOut` names what — so being verified and moving on are the same action,
+and a stamp can never sit on a step that was not checked first. There is no
+unstamp: an answer stays editable, but the stamp is a record of a check that
+happened.
+
+Two deliberate exceptions:
+
+- An **optional** step with nothing submitted reads *Skip this step* and moves on
+  without stamping. A stamp on an untouched step would be a lie about what was
+  done.
+- A step already stamped just navigates. `doneAt` is the moment it was earned and
+  is never rewritten.
+
+**Steps open in order.** `blockerFor(id)` returns the first required step before
+this one that is not stamped; while it returns something, the step renders as a
+**Preview** — prose, code blocks and copy buttons fully live, the proof fields
+blurred behind `inert` and a *Finish step N first* overlay that links back. The
+sidebar keeps every step clickable, because reading ahead is the point; only
+submitting ahead is refused. Ctrl/Cmd+V is refused on a preview too, so a pasted
+screenshot cannot land on a step that has not opened.
+
+One carve-out worth keeping: a step that is *itself* stamped is never shut,
+whatever sits behind it. Accounts carrying stamps from before the order was
+enforced would otherwise have their own finished answers hidden behind a preview.
+
 ### The two exports, and why they differ
 
 **Project documentation** (participant, unlocks at 15/15) is a portfolio piece —
@@ -253,11 +285,12 @@ and an `href(text, url)`.
 
 ### Finishing
 
-The last step (`h4d`) ends with **Finish →** instead of *Next step*, which hands
-over to *My project* — where the documentation, the share sheet and the progress
-report all live. It is deliberately not gated on 15/15: someone who has not
-finished still lands on the page that tells them what is left, and their
-progress report is downloadable from there either way.
+On the last step (`h4d`) that same button reads **Finish →**: it stamps the step
+like any other, then hands over to *My project* — where the documentation, the
+share sheet and the progress report all live. The handover is deliberately not
+gated on 15/15, because a step can be stamped out of order on older data:
+someone who has not finished still lands on the page that tells them what is
+left, with their progress report downloadable either way.
 
 ### Screenshots
 
@@ -266,7 +299,8 @@ one — it removes the save-file-then-browse detour, the single biggest friction
 reduction in the app. Images are downscaled to 1280px at JPEG 0.72 before upload,
 then stored under `<user-id>/<step-id>/<uuid>.jpg` in the private `proofs`
 bucket. The first path segment is the owner, which is what every storage policy
-keys off.
+keys off. Paste is refused on a step that has not opened yet — see *Stamping, and
+the order steps open in*.
 
 Only 7 of the 16 steps take a screenshot: `p1`, `p3`, `h2a`, `h2c`, `h3a`,
 `h4a`, `h4b`. The rule is that an image earns its place when it shows something
