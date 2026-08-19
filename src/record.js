@@ -1,7 +1,8 @@
 import { STEPS, REQ, TOTAL, stepNumber } from './camp.js';
 import { store, V, SH, doneCount, allDone } from './store.js';
 import { $, $$, esc, toast, stampHTML, zoom, download, slug } from './ui.js';
-import { buildDoc, buildProgress, linkedInPost } from './doc.js';
+import { buildDoc, buildProgress } from './doc.js';
+import { openShare } from './share.js';
 import { goTo, renderAll } from './steps.js';
 import { show } from './main.js';
 
@@ -14,11 +15,11 @@ export function renderRecord() {
         <div class="grow">
           <span class="eyebrow" style="color:var(--stamp)">Unlocked</span>
           <h3>Your project documentation is ready</h3>
-          <p>A write-up of what you built, why you made the choices you made, and what you learned — with your screenshots throughout. Share it, print it, put it in your portfolio.</p>
+          <p>A write-up of what you built, why you made the choices you made, and what you learned — with your screenshots throughout. Download it for your portfolio, or share it to LinkedIn, Facebook, X, WhatsApp or email with the file attached.</p>
         </div>
         <div class="btns">
           <button class="btn btn-primary" id="dlDoc">Download documentation</button>
-          <button class="btn" id="copyPost">Copy post for LinkedIn</button>
+          <button class="btn" id="shareBtn">Share</button>
         </div>
       </div>`
     : `<div class="locked">
@@ -74,15 +75,10 @@ export function renderRecord() {
   const dd = $('#dlDoc');
   if (dd) dd.addEventListener('click', () => grab(dd, buildDoc, `${slug(V('h3a', 'ainame') || store.profile.name)}-project-documentation.html`, 'Downloaded — keep a copy for your portfolio'));
 
-  const cp = $('#copyPost');
-  if (cp) {
-    cp.addEventListener('click', () =>
-      navigator.clipboard
-        .writeText(linkedInPost())
-        .then(() => toast('Post copied — paste it straight into LinkedIn'))
-        .catch(() => toast("Couldn't reach the clipboard — try the download instead")),
-    );
-  }
+  // One sheet for every platform, with the documentation file going out
+  // alongside the post rather than being left behind in the app.
+  const sb = $('#shareBtn');
+  if (sb) sb.addEventListener('click', openShare);
 }
 
 // Building an export pulls every screenshot back down to inline it, so the

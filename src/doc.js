@@ -260,7 +260,9 @@ ${blocks}
 </div></body></html>`;
 }
 
-export function linkedInPost() {
+// One post, written to work on any platform — the sheet in share.js sends it to
+// whichever one the participant picks, with the documentation file alongside.
+export function sharePost() {
   const ai = V('h3a', 'ainame') || 'my own AI';
   const model = V('p1', 'model') || 'an open-source model';
   const live = V('h4b', 'liveurl');
