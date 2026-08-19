@@ -4,6 +4,9 @@ import { $, $$, esc, toast, stampHTML, zoom } from './ui.js';
 import { show } from './main.js';
 
 let current = STEPS[0].id;
+// `stepId:key` of the drop zone last focused, clicked or dropped on. Only read
+// for a step with more than one screenshot field, where pasting has to choose.
+let lastDrop = null;
 export const currentStep = () => current;
 export function goTo(id) {
   current = id;
@@ -195,6 +198,7 @@ export function renderStep() {
         <button class="btn btn-primary" id="goBtn">${esc(goLabel(s))}</button>
         <span class="missing" id="missingOut"></span>
       </div>`}
+      ${isFacilitator() ? '' : '<p class="ask">Not sure about any of this? Raise your hand — a facilitator will come to you.</p>'}
       ${st.done ? `<div style="margin-top:22px;text-align:right">${stampHTML(num, st.doneAt)}</div>` : ''}
     </section>`;
 
@@ -228,7 +232,9 @@ function wireStep(s, shut) {
   $$('[data-drop]').forEach((dz) => {
     const key = dz.dataset.drop;
     const input = document.querySelector(`[data-file="${key}"]`);
-    dz.addEventListener('click', () => input.click());
+    const aim = () => (lastDrop = s.id + ':' + key);
+    dz.addEventListener('focus', aim);
+    dz.addEventListener('click', () => { aim(); input.click(); });
     dz.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
     });
@@ -238,6 +244,7 @@ function wireStep(s, shut) {
     dz.addEventListener('drop', (e) => {
       e.preventDefault();
       dz.classList.remove('over');
+      aim();
       upload(s, key, e.dataTransfer.files);
     });
   });
@@ -310,7 +317,11 @@ async function upload(s, key, files) {
   const n = await addScreenshots(s.id, key, files);
   if (n) {
     renderStep();
-    toast(n > 1 ? n + ' screenshots added' : 'Screenshot added');
+    const shots = s.proofs.filter((p) => p.type === 'screenshot');
+    // One screenshot field has nothing to disambiguate; with two, the toast has
+    // to say which one took it or a mis-aimed paste goes unnoticed.
+    const where = shots.length > 1 ? ' — ' + shots.find((p) => p.key === key).label : '';
+    toast((n > 1 ? n + ' screenshots added' : 'Screenshot added') + where);
   }
 }
 
@@ -328,8 +339,14 @@ export function wireGlobalKeys() {
       return;
     }
     const s = stepById(current);
-    const sp = s.proofs.find((p) => p.type === 'screenshot');
-    if (!sp) { toast("This step doesn't take screenshots"); return; }
+    const sps = s.proofs.filter((p) => p.type === 'screenshot');
+    if (!sps.length) { toast("This step doesn't take screenshots"); return; }
+    // Two screenshot fields on one step means paste can't just take the first,
+    // or every capture lands under the same label. Aim at the drop zone holding
+    // focus, then the last one touched, and only then fall back.
+    const held = lastDrop && lastDrop.startsWith(s.id + ':') ? lastDrop.slice(s.id.length + 1) : null;
+    const aimed = document.activeElement?.closest?.('[data-drop]')?.dataset.drop || held;
+    const sp = sps.find((p) => p.key === aimed) || sps[0];
     await upload(s, sp.key, items.map((i) => i.getAsFile()).filter(Boolean));
   });
 

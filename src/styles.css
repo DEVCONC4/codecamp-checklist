@@ -144,6 +144,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
      <ol class="acts"><li> …  something you DO, numbered, in order
      <div class="lesson"> …   something you READ — why it works, what it means
      <div class="callout"> …  an aside or a gotcha (already in use)
+     <details class="how"> …  optional help, folded away behind an "i"
 
    Anything not inside .acts is not a step, so nobody has to guess whether a
    paragraph wanted something from them. */
@@ -163,6 +164,32 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .lesson p{color:var(--ink-soft);font-size:16px;margin:0 0 10px}
 .lesson p:last-child{margin-bottom:0}
 
+/* <details class="how"><summary><i>i</i>Label</summary><div class="body"> … </div></details>
+   Optional help, folded away. Anyone who has installed Git before never opens
+   it; anyone who hasn't gets the whole click path without the step reading as
+   twice the work. Native <details>, so it needs no JavaScript and keeps its
+   keyboard behaviour. */
+.how{margin:0 0 16px;border:1.5px solid var(--rule);border-radius:4px;background:var(--panel-2)}
+.how>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:9px 13px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.how>summary::-webkit-details-marker{display:none}
+.how>summary::after{content:"Show";margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--ink-faint)}
+.how>summary:hover,.how>summary:focus-visible{color:var(--stamp)}
+.how>summary>i{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-family:var(--display);font-size:11px;font-style:normal;font-weight:700;line-height:1}
+.how[open]>summary{border-bottom:1.5px solid var(--rule)}
+.how[open]>summary::after{content:"Hide"}
+.how>.body{padding:14px 15px 2px}
+.how>.body>p,.how>.body li{font-size:15.5px;color:var(--ink-soft)}
+.how>.body>p{margin:0 0 12px}
+.how>.body ol,.how>.body ul{margin:0 0 12px;padding-left:20px}
+.how>.body .codeblock{margin-bottom:12px}
+.prose li>.how{margin:9px 0 14px}
+.opthead+p+.how{margin-top:-4px}
+
+/* Every step closes with the same quiet reminder that the room has people in
+   it, not only a form. Small, faint, never in the way. */
+.ask{font-size:13.5px;font-style:italic;color:var(--ink-faint);margin:14px 0 0}
+
+
 /* proof section */
 .proof{margin-top:38px;background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:26px 26px 22px;box-shadow:var(--shadow)}
 .proof>header{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
@@ -170,7 +197,7 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .proof .lede{color:var(--ink-soft);font-size:15.5px;margin:0 0 22px}
 .drop{border:2px dashed var(--rule);border-radius:5px;background:var(--paper);padding:26px 18px;text-align:center;cursor:pointer;transition:.15s}
 .drop:hover,.drop.over{border-color:var(--stamp);background:var(--stamp-tint)}
-.drop .kbd{font-family:var(--mono);font-size:11px;font-weight:700;border:1.5px solid var(--rule);border-bottom-width:3px;border-radius:4px;padding:2px 6px;background:var(--panel-2)}
+.kbd{font-family:var(--mono);font-size:11px;font-weight:700;border:1.5px solid var(--rule);border-bottom-width:3px;border-radius:4px;padding:2px 6px;background:var(--panel-2)}
 .drop p{margin:0;font-size:15px;color:var(--ink-soft)}
 .drop .big{font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink);margin-bottom:5px}
 .shots{display:flex;flex-wrap:wrap;gap:11px;margin-top:14px}

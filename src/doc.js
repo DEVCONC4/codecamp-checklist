@@ -2,7 +2,7 @@
 //
 // buildDoc      — a portfolio write-up. Editorial, public, wrap-up withheld.
 // buildProgress — a working record for the facilitator. Always available, so
-//                 nobody who stalls in Hour 2 leaves with nothing to hand in.
+//                 nobody who stalls in Level 2 leaves with nothing to hand in.
 //
 // They differ on purpose: the write-up sits on a lighter editorial ground, the
 // progress report wears the app's own logbook paper.
@@ -117,7 +117,7 @@ ul.refs li{margin-bottom:7px;font-size:16.5px}
 <header class="hero">
   <span class="lbl">${esc(CAMP.title)} · Project documentation</span>
   <h1>${esc(ai)}</h1>
-  <p class="tag">A private AI that runs on my own computer — built, customized and deployed in four hours.</p>
+  <p class="tag">A private AI that runs on my own computer — built, customized and deployed in three hours.</p>
   <div class="by">${esc(me.name)}${gh ? ' · @' + esc(gh) : ''} · ${esc(date)}</div>
   <div class="links">${link(live, 'Live site')}${link(repo, 'Source code')}</div>
 </header>
@@ -136,7 +136,7 @@ ul.refs li{margin-bottom:7px;font-size:16.5px}
   ${decision('Personality', 'The system prompt I wrote',
     V('h3a', 'prompt') ? `<blockquote>${esc(V('h3a', 'prompt'))}</blockquote><p>It replies in ${esc(lang)} no matter what language the question comes in.</p>` : '')}
   ${decision('Knowledge', 'What I taught it',
-    V('h3c', 'qa') ? `<p>${esc(V('h3c', 'qa'))}</p><p>The document isn't used for training. Relevant passages are retrieved and added to the prompt at question time — retrieval-augmented generation — which is why a long file still works on a small model.</p>` : '')}
+    V('h3c', 'file') ? `<p>${esc(V('h3c', 'file'))}</p>${V('h3c', 'asked') ? `<p class="an"><span>Asked</span>${esc(V('h3c', 'asked'))}</p>` : ''}<p>The document isn't used for training. Relevant passages are retrieved and added to the prompt at question time — retrieval-augmented generation — which is why a long file still works on a small model.</p>` : '')}
 </section>
 
 <section>
@@ -272,7 +272,7 @@ export function sharePost() {
 Meet ${ai}: ${model} running locally through Ollama, answering in ${lang}, grounded on my own documents. No cloud, no subscription, no data leaving my machine.
 ${live ? '\nTry it: ' + live : ''}
 
-Four hours, from install to deployed, at ${CAMP.title} with DEVCON Philippines. Most of us use AI built somewhere else. Today I built one.
+Three hours, from install to deployed, at ${CAMP.title} with DEVCON Philippines. Most of us use AI built somewhere else. Today I built one.
 
 #AISaBarangay #DEVCON #OpenSource #AI #Philippines`;
 }

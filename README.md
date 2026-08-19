@@ -1,6 +1,6 @@
 # Barangay AI Code Camp — checklist
 
-Codelabs crossed with Google Forms, for a 4-hour BYOD camp where participants
+Codelabs crossed with Google Forms, for a 3-hour BYOD camp where participants
 build and deploy their own local AI. Step-by-step instructions on one side,
 structured proof-of-completion capture on the other.
 
@@ -229,9 +229,10 @@ Three proof fields are deliberately comprehension checks rather than data entry:
   picks it needs their key rotated, not moved — the mentor note says so.
 - `h1a.why` asks for RAM and GPU, so it can't be answered by copying a model
   name off the projector.
-- `h3c.qa` asks which chunk the Sources panel pulled and what the match score
-  was. Unanswerable without opening the panel — which is the moment
-  "grounded, not trained" lands.
+- `h3c.context` wants a capture of the *What the model actually read* panel.
+  Impossible to produce without opening it — which is the moment "grounded, not
+  trained" lands, and where the retrieved chunks visibly outweigh the question
+  that was asked.
 
 Design new fields the same way: prefer a question that can't be answered without
 doing the thing.
@@ -274,7 +275,7 @@ Self-contained HTML with images inlined as data URIs; prints cleanly to PDF.
 
 **Progress report** (participant, always available) is the working record:
 every step, finished or not. This exists because the write-up is gated on
-finishing, and the people who stall in Hour 2 are exactly the ones whose data is
+finishing, and the people who stall in Level 2 are exactly the ones whose data is
 most useful. Nobody leaves with nothing to hand in.
 
 **Excel** (facilitator) has two sheets. *Roster* is one row per participant.
@@ -331,10 +332,15 @@ bucket. The first path segment is the owner, which is what every storage policy
 keys off. Paste is refused on a step that has not opened yet — see *Stamping, and
 the order steps open in*.
 
-Only 8 of the 16 steps take a screenshot: `p1`, `p3`, `h2a`, `h2c`, `h2d`,
-`h3a`, `h4a`, `h4b`. The rule is that an image earns its place when it shows
-something no field can assert — a URL you can click is better evidence than a
-photo of a page.
+Ten of the 16 steps take a screenshot: `p1`, `p3`, `h1c`, `h2a`, `h2c`,
+`h2d`, `h3a`, `h3c`, `h4a`, `h4b` — eleven fields in all, because `h3c` takes
+two. The rule is that an image earns its place when it shows something no field
+can assert — a URL you can click is better evidence than a photo of a page.
+
+`h3c` is also the only step where paste has to choose a field. Ctrl/Cmd+V files
+under the drop zone that has focus, then the last one clicked or dropped on, and
+only then the first — and the toast names which field took it, so a mis-aimed
+paste doesn't pass unnoticed.
 
 ---
 
@@ -376,11 +382,11 @@ operations, **the app wins** — this is a companion to it, not a replacement.
 
 ## Known gaps
 
-1. **Hour 4 is thin.** A pull-request step was removed at the client's request,
-   leaving one deploy step plus a wrap-up against a full hour. Expect dead air
-   near the end; consider extending Hour 3 or adding a closing activity.
+1. **Level 4 is thin.** A pull-request step was removed at the client's request,
+   leaving one deploy step plus a wrap-up against a full level. Expect dead air
+   near the end; consider extending Level 3 or adding a closing activity.
 2. **`p2` and `h2b` are pure self-report.** Neither has a screenshot, so nothing
-   independently verifies them. Acceptable because Hour 2 fails loudly if either
+   independently verifies them. Acceptable because Level 2 fails loudly if either
    was skipped and `h2c`'s screenshot catches it — but the data can't stand alone.
 3. **Screenshots soften at 1280px / 0.72.** Fine for chat UIs, occasionally lossy
    on small terminal text. Raise it in `shrink()` if legibility complaints appear.

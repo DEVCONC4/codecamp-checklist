@@ -9,6 +9,7 @@
 //   <div class="lesson">…    explanation — why it works, what to look at
 //   <div class="callout">…   an aside or a gotcha
 //   <p class="cmdlabel">…    which machine the command block below it is for
+//   <details class="how">…   optional help behind an "i" — how to install X
 //
 // Nothing outside .acts is an instruction. Worth keeping to as steps are added.
 //
@@ -31,10 +32,22 @@ export const CAMP = {
           minutes: 20,
           body: `
             <p>Ollama is the free app that runs the AI on your own computer — no cloud, no API fees, nothing leaving the room. Download it from <a href="https://ollama.com/download" target="_blank" rel="noopener">ollama.com/download</a>, then pull a model.</p>
+            <details class="how"><summary><i>i</i>How to install Ollama</summary><div class="body">
+              <p><strong>Windows</strong> — run the installer and let it finish. Ollama then sits in the system tray and starts with your machine.</p>
+              <p><strong>macOS</strong> — unzip the download, drag <strong>Ollama</strong> into <strong>Applications</strong>, then open it once and allow it when macOS asks.</p>
+              <p><strong>Linux</strong> — one line in a terminal:</p>
+              <div class="codeblock"><pre>curl -fsSL https://ollama.com/install.sh | sh</pre><button class="copy" data-copy="curl -fsSL https://ollama.com/install.sh | sh">Copy</button></div>
+              <p>Either way, <code>ollama --version</code> then prints a number. If the terminal says it doesn't know the command, close that window and open a new one — a fresh terminal is what notices a newly installed tool.</p>
+            </div></details>
+            <details class="how"><summary><i>i</i>How to open a terminal</summary><div class="body">
+              <p><strong>Windows</strong> — press <span class="kbd">Win</span> <span class="kbd">X</span> and choose <strong>Terminal</strong>, or click Start and type <em>powershell</em>.</p>
+              <p><strong>macOS</strong> — press <span class="kbd">Cmd</span> <span class="kbd">Space</span>, type <em>terminal</em>, press Enter.</p>
+              <p>Or from inside VS Code: <strong>Terminal → New Terminal</strong>. That one has the useful habit of opening in whatever folder you already have open.</p>
+            </div></details>
             <div class="codeblock"><pre>ollama pull qwen2.5:3b
 ollama list</pre><button class="copy" data-copy="ollama pull qwen2.5:3b
 ollama list">Copy</button></div>
-            <p><code>qwen2.5:3b</code> is about 2 GB and a safe default. If you already read <strong>Models 101</strong>, pull the one that fits your machine instead — you'll justify your pick in Hour 1.</p>
+            <p><code>qwen2.5:3b</code> is about 2 GB and a safe default. If you already read <strong>Models 101</strong>, pull the one that fits your machine instead — you'll justify your pick in Level 1.</p>
             <div class="callout">Do this at home, on home wifi. Downloads are the single biggest time sink on camp day.</div>`,
           proofs: [
             { key: 'os', type: 'choice', label: 'Which operating system are you on?', options: ['Windows', 'macOS', 'Linux'], required: true },
@@ -54,9 +67,17 @@ ollama list">Copy</button></div>
             <p class="eyebrow" style="display:block;margin-bottom:6px">macOS / Linux</p>
             <div class="codeblock"><pre>echo 'export OLLAMA_ORIGINS="*"' &gt;&gt; ~/.zshrc</pre><button class="copy" data-copy="echo 'export OLLAMA_ORIGINS=&quot;*&quot;' >> ~/.zshrc">Copy</button></div>
             <div class="callout"><code>*</code> means any page you visit can reach your local Ollama while it's running. That's the right trade for a camp laptop. To be strict, set the exact origin instead — <code>http://localhost:8000</code>.</div>
-            <p>Skipping this is survivable — Hour 2 has a script that handles it each time. Doing it now just means you never think about it again.</p>`,
+            <details class="how"><summary><i>i</i>How to check it worked</summary><div class="body">
+              <p>Open a <em>new</em> terminal — the one you just used still holds the old settings — and print the value back:</p>
+              <p class="cmdlabel">Windows <span class="note">PowerShell</span></p>
+              <div class="codeblock"><pre>echo $env:OLLAMA_ORIGINS</pre><button class="copy" data-copy="echo $env:OLLAMA_ORIGINS">Copy</button></div>
+              <p class="cmdlabel">macOS / Linux</p>
+              <div class="codeblock"><pre>echo $OLLAMA_ORIGINS</pre><button class="copy" data-copy="echo $OLLAMA_ORIGINS">Copy</button></div>
+              <p>A lone <code>*</code> means it stuck. A blank line means it didn't — run the command above again, in a terminal you opened yourself.</p>
+            </div></details>
+            <p>Skipping this is survivable — Level 2 has a script that handles it each time. Doing it now just means you never think about it again.</p>`,
           proofs: [
-            { key: 'restarted', type: 'choice', label: 'Did you quit and reopen Ollama afterwards?', options: ['Yes, restarted it', 'Not yet', "I'll use the Hour 2 script instead"], required: true },
+            { key: 'restarted', type: 'choice', label: 'Did you quit and reopen Ollama afterwards?', options: ['Yes, restarted it', 'Not yet', "I'll use the Level 2 script instead"], required: true },
           ],
           mentorNote: 'This is the single most common setup dead-end at camps. The failure mode is nasty because Ollama looks like it’s running fine. Watch for bash syntax typed into PowerShell — OLLAMA_ORIGINS=* ollama serve does nothing on Windows and fails almost silently.',
         },
@@ -65,32 +86,100 @@ ollama list">Copy</button></div>
           title: 'Tools and accounts',
           minutes: 20,
           body: `
-            <p>Five things, all free. Get them out of the way before the room starts.</p>
+            <p>Five things, all free. Get them out of the way before the room starts. Each one carries an <strong>i</strong> — open it if you have not done that particular thing before, ignore it if you have.</p>
             <ul>
-              <li><strong>VS Code</strong> to edit the files — <a href="https://code.visualstudio.com" target="_blank" rel="noopener">code.visualstudio.com</a></li>
-              <li><strong>Git</strong> to upload your code — <a href="https://git-scm.com/downloads" target="_blank" rel="noopener">git-scm.com/downloads</a></li>
-              <li><strong>GitHub account</strong>, where your code lives — <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a></li>
-              <li><strong>Vercel account</strong>, which puts your AI online. <strong>Sign in with GitHub</strong> so the two connect — <a href="https://vercel.com/signup" target="_blank" rel="noopener">vercel.com/signup</a></li>
+              <li><strong>VS Code</strong> to edit the files — <a href="https://code.visualstudio.com" target="_blank" rel="noopener">code.visualstudio.com</a>
+                <details class="how"><summary><i>i</i>How to install VS Code</summary><div class="body">
+                  <p>The big download button on that page already matches your operating system, so take whatever it offers.</p>
+                  <p><strong>Windows</strong> — run the <code>.exe</code> and accept the defaults. Leave <em>Add to PATH</em> ticked if it asks.</p>
+                  <p><strong>macOS</strong> — unzip the download, then drag <strong>Visual Studio Code</strong> into your <strong>Applications</strong> folder before opening it. Opening it from the Downloads folder works today and confuses you tomorrow.</p>
+                  <p>Open it once now, so the first time you use it is not in the room.</p>
+                </div></details>
+              </li>
+              <li><strong>Git</strong> to upload your code — <a href="https://git-scm.com/downloads" target="_blank" rel="noopener">git-scm.com/downloads</a>
+                <details class="how"><summary><i>i</i>How to install Git</summary><div class="body">
+                  <p><strong>Windows</strong> — run the installer and accept every default screen. It also installs <strong>Git Bash</strong>; you won't need it, and leaving it costs nothing.</p>
+                  <p><strong>macOS</strong> — the quickest route is one line in a terminal, which asks the system to install its developer tools:</p>
+                  <div class="codeblock"><pre>xcode-select --install</pre><button class="copy" data-copy="xcode-select --install">Copy</button></div>
+                  <p><strong>Linux</strong> — <code>sudo apt install git</code> on Debian or Ubuntu, or your distribution's equivalent.</p>
+                  <p>Then check it landed. <code>git --version</code> should print a number. If the terminal says it doesn't know the command, close that window and open a new one — a fresh terminal is what notices a newly installed tool.</p>
+                </div></details>
+              </li>
+              <li><strong>GitHub account</strong>, where your code lives — <a href="https://github.com/signup" target="_blank" rel="noopener">github.com/signup</a>
+                <details class="how"><summary><i>i</i>How to create a GitHub account</summary><div class="body">
+                  <p>Email, password, username, and the puzzle it gives you. Three things worth knowing while you pick:</p>
+                  <p>Your username becomes part of every link you hand in — <code>github.com/&lt;username&gt;/…</code> — so choose something you would put on a CV.</p>
+                  <p>Confirm the mail they send you before camp day. Some actions stay blocked on an unconfirmed account, and the block is easy to mistake for a broken button.</p>
+                  <p>Keep the password somewhere you can reach in the room. You will sign in again with it, on Vercel.</p>
+                </div></details>
+              </li>
+              <li><strong>Vercel account</strong>, which puts your AI online. <strong>Sign in with GitHub</strong> so the two connect — <a href="https://vercel.com/signup" target="_blank" rel="noopener">vercel.com/signup</a>
+                <details class="how"><summary><i>i</i>How to connect Vercel to GitHub</summary><div class="body">
+                  <p>This is the one worth doing carefully. The link between the two accounts is what lets Vercel see your fork later, and repairing it under time pressure is the most common Level 4 delay.</p>
+                  <ol>
+                    <li>Open <a href="https://vercel.com/signup" target="_blank" rel="noopener">vercel.com/signup</a> and choose the free <strong>Hobby</strong> plan.</li>
+                    <li>Pick <strong>Continue with GitHub</strong> — not the email option. This is the whole point of the step.</li>
+                    <li>GitHub asks whether Vercel may act on your behalf. Click <strong>Authorize Vercel</strong>.</li>
+                    <li>Then it asks which repositories Vercel may see. <strong>All repositories</strong> is simplest for a camp; <em>Only select repositories</em> works too, as long as you remember to come back and add your fork.</li>
+                    <li>You're done when the Vercel dashboard shows your GitHub avatar, and <strong>Add New → Project</strong> lists repositories you recognise.</li>
+                  </ol>
+                  <p><strong>Already signed up with an email address?</strong> You don't have to start over. In Vercel, open your account settings, find the connected-accounts section, and connect GitHub there — then authorise it on the GitHub screen exactly as above.</p>
+                </div></details>
+              </li>
               <li><strong>Chrome or Edge</strong> as your browser</li>
             </ul>
-            <p>You also need a way to serve the folder over a local web server. Check what you already have:</p>
+
+            <p>You also need a way to serve the folder over a local web server. There are three, you only need <strong>one</strong>, and the fastest way to choose is to find out what your machine already has:</p>
             <div class="codeblock"><pre>git --version
-python --version</pre><button class="copy" data-copy="git --version
-python --version">Copy</button></div>
-            <p>No Python? Use <code>npx serve .</code> if you have Node, or add the <strong>Live Server</strong> extension in VS Code and right-click <code>index.html</code> → <em>Open with Live Server</em>. Any one of the three is enough.</p>`,
+python --version
+node --version</pre><button class="copy" data-copy="git --version
+python --version
+node --version">Copy</button></div>
+            <p>Whichever of those printed a version number decides it for you. All three end up doing the same thing — putting the project folder on <code>http://localhost</code> so the browser will load it properly.</p>
+
+            <h4 class="opthead"><span class="tag">Way 1</span>python -m http.server</h4>
+            <p>Nothing to install, it comes with Python. Take this one if <code>python --version</code> printed a number.</p>
+            <details class="how"><summary><i>i</i>What this looks like</summary><div class="body">
+              <p>In Level 2 you'll open a terminal in the project folder and run one line, then leave that window open while you work:</p>
+              <div class="codeblock"><pre>python -m http.server 8000</pre><button class="copy" data-copy="python -m http.server 8000">Copy</button></div>
+              <p>It prints <em>Serving HTTP on …</em> and then looks like it has frozen. That is it working — the terminal is busy being the web server.</p>
+              <p>On macOS and Linux the command is usually <code>python3</code>, not <code>python</code>. If plain <code>python</code> printed nothing there, try <code>python3 --version</code> before you rule this out.</p>
+            </div></details>
+
+            <h4 class="opthead"><span class="tag">Way 2</span>npx serve .</h4>
+            <p>Comes with Node. Take this one if <code>node --version</code> printed a number and Python didn't.</p>
+            <details class="how"><summary><i>i</i>What this looks like</summary><div class="body">
+              <p>Same idea, different tool. In the project folder:</p>
+              <div class="codeblock"><pre>npx serve .</pre><button class="copy" data-copy="npx serve .">Copy</button></div>
+              <p>The first run asks permission to download the <code>serve</code> package — answer yes. It then prints the address it picked, which is usually <code>http://localhost:3000</code> rather than 8000. Use the number it prints, not the one in the instructions.</p>
+              <p>No Node either? Install it from <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a>, or take Way 3 and skip the terminal entirely.</p>
+            </div></details>
+
+            <h4 class="opthead"><span class="tag">Way 3</span>VS Code Live Server</h4>
+            <p>An extension, and no terminal at all. Take this one if neither of the above printed anything, or if terminals make you nervous.</p>
+            <details class="how"><summary><i>i</i>How to set it up</summary><div class="body">
+              <ol>
+                <li>Open VS Code and click <strong>Extensions</strong> in the left bar — the four-squares icon.</li>
+                <li>Search <strong>Live Server</strong> and install the one by Ritwick Dey.</li>
+                <li>In Level 2, open the project folder in VS Code, right-click <code>index.html</code> and choose <strong>Open with Live Server</strong>.</li>
+              </ol>
+              <p>It opens your browser for you, on a port it picks — usually <code>5500</code>. Use whatever number appears in the address bar.</p>
+            </div></details>
+
+            <div class="callout">Not sure which you have, or the check printed something you don't recognise? Pick the first one that gave you a version number and move on. Level 2 walks through whichever you chose, and the answer below is editable all day.</div>`,
           proofs: [
             { key: 'gh', type: 'text', label: 'Your GitHub username', hint: 'Just the username — this is where your fork lives', required: true },
-            { key: 'serve', type: 'choice', label: 'How will you serve the folder?', options: ['python -m http.server', 'npx serve .', 'VS Code Live Server'], required: true },
+            { key: 'serve', type: 'choice', label: 'Which of the three will you use?', hint: 'Whichever the version check printed a number for. Not sure yet? Pick the first one that answered — Level 2 walks through whichever you choose, and you can change this later', options: ['python -m http.server', 'npx serve .', 'VS Code Live Server'], required: true },
             { key: 'vercel', type: 'choice', label: 'Vercel account, signed in with GitHub?', options: ['Done', 'Signed up with email instead', 'Not yet'], required: true },
             { key: 'shot', type: 'screenshot', label: 'Terminal showing your git and python versions', required: true },
           ],
-          mentorNote: 'Vercel and Groq signups eat Hour 4 if they aren’t pre-done — this is where you buy that time back. Anyone who signed up to Vercel with email rather than GitHub will hit friction at import; have them link the account now, not at 3pm.',
+          mentorNote: 'Vercel and Groq signups eat Level 4 if they aren’t pre-done — this is where you buy that time back. Anyone who signed up to Vercel with email rather than GitHub will hit friction at import; have them link the account now, not at 3pm. The install walkthroughs are folded behind the i toggles, so a room that already has the tools sees a short step and a room that doesn’t has the click paths without you reading them out. Nobody has to admit to anything to open one.',
         },
       ],
     },
     {
       id: 'm1',
-      title: 'Hour 1 — Understand & fork',
+      title: 'Level 1 — Understand & fork',
       steps: [
         {
           id: 'h1a',
@@ -111,7 +200,7 @@ python --version">Copy</button></div>
             { key: 'size', type: 'choice', label: 'What size band did you land on?', options: ['1B–3B', '7B–8B', '13B or larger'], required: true },
             { key: 'why', type: 'longtext', label: 'Why that model for your machine?', hint: 'Mention your RAM and whether you have a dedicated GPU — this is the part that proves you can read a model name, not just copy one', required: true },
           ],
-          mentorNote: 'The fork is fast; the concepts are what fills this hour. Don’t rush the glossary — it’s the difference between following instructions and understanding them. If someone can explain why they picked Q4 over Q8, this step worked.',
+          mentorNote: 'The fork is fast; the concepts are what fills this level. Don’t rush the glossary — it’s the difference between following instructions and understanding them. If someone can explain why they picked Q4 over Q8, this step worked.',
         },
         {
           id: 'h1b',
@@ -122,11 +211,11 @@ python --version">Copy</button></div>
             <p>→ <a href="https://github.com/Spod101/barangayAI" target="_blank" rel="noopener">github.com/Spod101/barangayAI</a></p>
             <p><strong>On the fork screen, change the repository name to <code>&lt;surname&gt;_barangayAI</code></strong> before you click the green button. So if your surname is Dela Cruz, the name is <code>delacruz_barangayAI</code> — lowercase, no spaces.</p>
             <p>Repository name is the box right under <em>Owner</em>; GitHub fills it with <code>barangayAI</code>, so type over it. Everything else on that screen stays as it is.</p>
-            <p>Your fork then lives at <code>github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Hour 4. Keep the name — the rest of the day's commands assume it, and it's how the facilitators find your repo in a room of thirty identical ones.</p>`,
+            <p>Your fork then lives at <code>github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Level 4. Keep the name — the rest of the day's commands assume it, and it's how the facilitators find your repo in a room of thirty identical ones.</p>`,
           proofs: [
             { key: 'forkurl', type: 'text', label: "Your fork's URL", hint: 'Should have your username in it, not Spod101, and end in <surname>_barangayAI', required: true },
           ],
-          mentorNote: 'Two things to catch here, both cheap now and expensive later. People who skip the fork and clone the original: everything works until git push in Hour 4, then permission denied under time pressure. And people who forget to rename — the fork screen defaults to barangayAI, so the rename is easy to click past. Renaming after the fact is fine (Settings → General → Repository name), but their clone folder and remote are then wrong too.',
+          mentorNote: 'Two things to catch here, both cheap now and expensive later. People who skip the fork and clone the original: everything works until git push in Level 4, then permission denied under time pressure. And people who forget to rename — the fork screen defaults to barangayAI, so the rename is easy to click past. Renaming after the fact is fine (Settings → General → Repository name), but their clone folder and remote are then wrong too.',
         },
         {
           id: 'h1c',
@@ -144,13 +233,13 @@ cd <surname>_barangayAI">Copy</button></div>
             { key: 'how', type: 'choice', label: 'How did you get the code?', options: ['git clone', 'Downloaded the ZIP'], required: true },
             { key: 'shot', type: 'screenshot', label: 'The project open in VS Code, folder name visible', hint: 'The folder in the sidebar should read <surname>_barangayAI — that one frame shows the clone worked and that you cloned your own fork', required: true },
           ],
-          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Hour 4. Steer everyone to clone unless Git is genuinely broken on their machine. The screenshot is the cheap check on the previous step too: a sidebar reading plain barangayAI means they cloned the original, or forked without renaming, and both are far cheaper to fix now than at git push in Hour 4.',
+          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Level 4. Steer everyone to clone unless Git is genuinely broken on their machine. The screenshot is the cheap check on the previous step too: a sidebar reading plain barangayAI means they cloned the original, or forked without renaming, and both are far cheaper to fix now than at git push in Level 4.',
         },
       ],
     },
     {
       id: 'm2',
-      title: 'Hour 2 — Run it locally',
+      title: 'Level 2 — Run it locally',
       steps: [
         {
           id: 'h2a',
@@ -243,7 +332,7 @@ cd <surname>_barangayAI">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">What it's asking</span>
                   <p>Step 2, <strong>Pick a model</strong>, has a spec checker — tell it your RAM and graphics card and it sorts every model into what your machine can handle, and downloads one for you if you skipped the terminal.</p>
-                  <p>Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Hour 3.</p>
+                  <p>Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Level 3.</p>
                 </div>
                 <div class="callout">The wizard reopens on every reload. That's normal, not a bug — close it and carry on. The book icon next to the gear opens the <strong>Camp Guidebook</strong>: these same steps, inside the app.</div>
               </li>
@@ -286,13 +375,13 @@ cd <surname>_barangayAI">Copy</button></div>
                 <div class="codeblock"><pre>http://localhost:11434/v1</pre><button class="copy" data-copy="http://localhost:11434/v1">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">The key field</span>
-                  <p>The API key box on the LOCAL card is optional — it's there for protected local endpoints, which yours isn't. Leave it blank. The <strong>Quickstart</strong> panel inside that card repeats the Ollama commands from earlier in the hour if you need them again, including <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
+                  <p>The API key box on the LOCAL card is optional — it's there for protected local endpoints, which yours isn't. Leave it blank. The <strong>Quickstart</strong> panel inside that card repeats the Ollama commands from earlier in this level if you need them again, including <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
                 </div>
               </li>
 
               <li>
-                <p>Cloud only — on the API card, pick a provider from the dropdown: <strong>DeepSeek</strong>, <strong>OpenAI</strong>, <strong>Together</strong>, <strong>Groq</strong> or <strong>Custom</strong>. Choosing one auto-fills the endpoint URL for you.</p>
-                <div class="codeblock"><pre>https://api.deepseek.com/v1</pre><button class="copy" data-copy="https://api.deepseek.com/v1">Copy</button></div>
+                <p>Cloud only — on the API card, pick a provider from the dropdown: <strong>Groq</strong>, <strong>OpenAI</strong>, <strong>Together</strong>, <strong>DeepSeek</strong> or <strong>Custom</strong>. Choosing one auto-fills the endpoint URL for you. <strong>Groq</strong> is the camp default — free, and it's the same provider your published site uses in Level 4, so one key covers both.</p>
+                <div class="codeblock"><pre>https://api.groq.com/openai/v1</pre><button class="copy" data-copy="https://api.groq.com/openai/v1">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">Custom</span>
                   <p>Pick <strong>Custom</strong> when your provider isn't in the list, and paste its base URL yourself. It has to be the OpenAI-compatible base — the part that ends in <code>/v1</code> — not a full chat URL copied out of the browser.</p>
@@ -300,7 +389,7 @@ cd <surname>_barangayAI">Copy</button></div>
               </li>
 
               <li>
-                <p>Cloud only — get a key from the provider's own dashboard and paste it into the <strong>API key</strong> field.</p>
+                <p>Cloud only — get a key from the provider's own dashboard and paste it into the <strong>API key</strong> field. For Groq that's <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>, no card needed.</p>
                 <div class="callout"><strong>The key is stored in this browser only.</strong> It is never written into a file and never committed to your repo. Use a free-tier or spend-capped key, and don't put one on a projector or in a group chat — a shared key is a drained quota by lunch.</div>
               </li>
 
@@ -308,7 +397,7 @@ cd <surname>_barangayAI">Copy</button></div>
                 <p>Click <strong>Test</strong>, and then <strong>Add</strong>.</p>
                 <div class="lesson">
                   <span class="tag">What each button does</span>
-                  <p><strong>Test</strong> pings <code>/models</code> on the endpoint, so it answers exactly one question: can the browser reach it at all. <strong>Add</strong> then auto-discovers every model that endpoint offers and lists them for you. If a provider hides its model list, the app falls back to a sensible default — <code>deepseek-chat</code>, <code>gpt-4o-mini</code> — which is not an error.</p>
+                  <p><strong>Test</strong> pings <code>/models</code> on the endpoint, so it answers exactly one question: can the browser reach it at all. <strong>Add</strong> then auto-discovers every model that endpoint offers and lists them for you. If a provider hides its model list, the app falls back to a sensible default for that provider rather than showing you an empty picker, which is not an error.</p>
                 </div>
               </li>
 
@@ -321,7 +410,7 @@ cd <surname>_barangayAI">Copy</button></div>
               </li>
             </ol>
 
-            <div class="callout">Everything you add here is saved <strong>in this browser only</strong>. It makes <em>your</em> copy work, not your published one — the live site gets its model from a Vercel environment variable instead, which you set in Hour 4.</div>`,
+            <div class="callout">Everything you add here is saved <strong>in this browser only</strong>. It makes <em>your</em> copy work, not your published one — the live site gets its model from a Vercel environment variable instead, which you set in Level 4.</div>`,
           proofs: [
             { key: 'card', type: 'choice', label: 'Which card did you use?', hint: 'Local is the camp default — pick Both only if you added a cloud endpoint as well', options: ['LOCAL — Ollama on my machine', 'API — a cloud provider', 'Both'], required: true },
             { key: 'provider', type: 'choice', label: 'If you used the API card, which provider?', options: ['Groq', 'DeepSeek', 'OpenAI', 'Together', 'Custom endpoint', 'Local only — no cloud provider'], required: false },
@@ -334,7 +423,7 @@ cd <surname>_barangayAI">Copy</button></div>
     },
     {
       id: 'm3',
-      title: 'Hour 3 — Customize',
+      title: 'Level 3 — Customize',
       steps: [
         {
           id: 'h3a',
@@ -349,7 +438,7 @@ cd <surname>_barangayAI">Copy</button></div>
             { key: 'prompt', type: 'longtext', label: 'Paste your system prompt', hint: "The actual text you wrote — this is the most interesting thing you'll make today", required: true },
             { key: 'shot', type: 'screenshot', label: 'Your AI, named and answering in character', required: true },
           ],
-          mentorNote: 'This is the fun hour. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones.',
+          mentorNote: 'This is the fun level. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones.',
         },
         {
           id: 'h3b',
@@ -371,21 +460,23 @@ cd <surname>_barangayAI">Copy</button></div>
             <p>Open <strong>Sources</strong> in the sidebar. Drop in your own <code>.txt</code>, <code>.md</code>, <code>.json</code>, <code>.csv</code>, <code>.log</code>, <code>.pdf</code> or <code>.docx</code> — up to <strong>2 MB each</strong>, anything bigger is skipped — then ask a question only that file could answer.</p>
             <p>The app doesn't stuff the whole file into every message. It pulls just the passages that match your question, which is why a long document still works on a small model.</p>
             <div class="callout"><strong>Nothing is being trained.</strong> Your files are chunked, and the chunks most relevant to each question are retrieved and pasted into the prompt. That's <strong>RAG</strong> — retrieval-augmented generation. The model is <em>grounded</em> on your documents, not trained on them.</div>
-            <p>Open the <strong>Sources</strong> panel under any answer to see exactly which chunk of which file it used, the similarity score that earned it a place, and the literal prompt that was sent to the model. The proof boxes below ask for your question, the reply, and that chunk and score separately — the last one is the only thing that proves the answer came from your file.</p>`,
+            <p>Open the <strong>Sources</strong> panel under any answer to see exactly which chunk of which file it used, and the similarity score that earned it a place.</p>
+            <p>Then expand <strong>What the model actually read</strong> under the same answer. It accounts for every token the model received and where each one came from — your system prompt, the built-in answer rules, the reply language, the extra knowledge you wrote, the matching chunks pulled from your sources, the line you typed, and the earlier messages in the chat, each with its share of the total. Two things are worth noticing: the retrieved chunks are usually the largest slice by far, and what <em>you</em> typed is a percent or two of what the model read. The chips along the bottom name the model and its temperature, and <strong>Show the exact text</strong> prints the literal messages that went over the wire.</p>
+            <p>The proof boxes below ask for your question, the reply, and a capture of that panel. The panel is the part that shows the answer came from your document and not from the model.</p>`,
           proofs: [
             { key: 'file', type: 'text', label: 'What document did you add?', hint: "Name and roughly what's in it", required: true },
             { key: 'asked', type: 'text', label: 'What did you ask it?', hint: 'Pick something only your file could answer — a name, a number, a date that is in no model anywhere', required: true },
             { key: 'replied', type: 'longtext', label: 'What did it answer?', hint: 'Paste the reply. Was it actually right?', required: true },
-            { key: 'chunk', type: 'longtext', label: 'Which chunk did it pull, and what was the match score?', hint: 'Open the Sources panel underneath the answer — it names the file, shows the passage it retrieved, and gives that passage a similarity score. This is the part that shows the answer came from your document and not from the model', required: true },
-            { key: 'shot', type: 'screenshot', label: 'Your question and its answer on screen', hint: 'Expand the Sources panel under the answer before you capture, so the question, the reply, the chunk and the match score are all in one frame', required: true },
+            { key: 'context', type: 'screenshot', label: 'The “What the model actually read” panel', hint: 'Expand it under the answer and capture the whole breakdown. The row for the matching chunks of your sources, and the share of the total it takes, are what show the answer came from your document', required: true },
+            { key: 'shot', type: 'screenshot', label: 'Your question and its answer on screen', hint: 'The chat itself — your question, the reply, and the Sources panel expanded underneath so the file it quoted is named in the frame', required: true },
           ],
-          mentorNote: 'If anyone says ‘it’s now trained on my file’, correct it there and then — grounded, not trained. Opening the Sources panel to show the retrieved chunk and its similarity score is the single best teaching moment in the camp. The chunk-and-score box is its own required field now, so a blank or hand-waved one is easy to spot on the desk. The screenshot is the faster check of the two: Sources collapsed in the frame means they never opened it, whatever the text box says.',
+          mentorNote: 'If anyone says ‘it’s now trained on my file’, correct it there and then — grounded, not trained. Opening What the model actually read and pointing at the matching-chunks row is the single best teaching moment in the camp: the retrieved passages are usually half of what the model saw, and the participant’s own question is one percent of it. That panel is a required upload now, so a step where it is missing or still collapsed is obvious on the desk without reading a word. This step takes two screenshots, so tell them to click the box they mean before pasting.',
         },
       ],
     },
     {
       id: 'm4',
-      title: 'Hour 4 — Publish',
+      title: 'Level 4 — Publish',
       steps: [
         {
           id: 'h4a',
@@ -435,10 +526,10 @@ git push">Copy</button></div>`,
             <p>Tell us how the day went. This genuinely shapes the next camp, and these answers go to the facilitator rather than into your project write-up.</p>`,
           proofs: [
             { key: 'pace', type: 'choice', label: 'How was the pace?', options: ['Too slow', 'About right', 'Too fast'], required: true },
-            { key: 'hardest', type: 'choice', label: 'Which hour was hardest?', options: ['Pre-install', 'Hour 1 — Fork', 'Hour 2 — Run it locally', 'Hour 3 — Customize', 'Hour 4 — Publish'], required: true },
+            { key: 'hardest', type: 'choice', label: 'Which level was hardest?', options: ['Pre-install', 'Level 1 — Fork', 'Level 2 — Run it locally', 'Level 3 — Customize', 'Level 4 — Publish'], required: true },
             { key: 'feedback', type: 'longtext', label: 'Anything we should change?', hint: 'Optional, but read by a human', required: false },
           ],
-          mentorNote: 'Collect the pace and hardest-hour ratings before people leave the room — response rate drops off a cliff once they’re out the door. The hardest-hour answers are your planning data for the next camp; expect Hour 2 to win and budget accordingly.',
+          mentorNote: 'Collect the pace and hardest-level ratings before people leave the room — response rate drops off a cliff once they’re out the door. The hardest-level answers are your planning data for the next camp; expect Level 2 to win and budget accordingly.',
         },
       ],
     },
