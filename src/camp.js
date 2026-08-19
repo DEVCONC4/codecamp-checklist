@@ -432,13 +432,15 @@ cd <surname>_barangayAI">Copy</button></div>
           body: `
             <p>Click the gear icon at the top right. Everything updates the live preview as you type — no code.</p>
             <p><strong>Settle on the name.</strong> You gave it one at first launch to get into the chat — this is where you change your mind. Bayani, Isko, Barangay AI, anything. It shows in the header, welcome screen, and avatars. Your own name is here too, and that's the one credited as the builder when you publish, so check it reads the way you want to be credited.</p>
-            <p><strong>Shape its personality.</strong> Write how it behaves: friendly tutor, barangay helper, coding buddy. This is its <strong>system prompt</strong> — a hidden instruction given before the conversation starts, like a job description on someone's first day. There are presets and an AI-assisted expander if you want help writing one.</p>`,
+            <p><strong>Shape its personality.</strong> Write how it behaves: friendly tutor, barangay helper, coding buddy. This is its <strong>system prompt</strong> — a hidden instruction given before the conversation starts, like a job description on someone's first day. There are presets and an AI-assisted expander if you want help writing one.</p>
+            <p><strong>Then say what it is in plain words.</strong> The box below asks for one or two sentences — who it helps, and what it does for them. A system prompt is instructions to the model; nobody reading your post or your write-up wants to decode one to find out what you built. This is the line that introduces it, and it goes straight into your project documentation and the post you share at the end.</p>`,
           proofs: [
             { key: 'ainame', type: 'text', label: 'What did you name your AI?', required: true },
+            { key: 'blurb', type: 'longtext', label: 'In a sentence or two, what is your AI?', hint: 'Plain words, no jargon — who it helps and what it does for them. This is what people read in your post and your documentation, so write it the way you would say it out loud', required: true },
             { key: 'prompt', type: 'longtext', label: 'Paste your system prompt', hint: "The actual text you wrote — this is the most interesting thing you'll make today", required: true },
             { key: 'shot', type: 'screenshot', label: 'Your AI, named and answering in character', required: true },
           ],
-          mentorNote: 'This is the fun level. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones.',
+          mentorNote: 'This is the fun level. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones. Watch the one-or-two-sentence description too: the usual first attempt is a paraphrase of the prompt, and ‘who is it for, and what do they get’ is the question that fixes it. Whatever they write there is what their post and write-up lead with.',
         },
         {
           id: 'h3b',

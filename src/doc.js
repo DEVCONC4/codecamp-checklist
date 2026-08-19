@@ -23,6 +23,7 @@ export async function buildDoc() {
   const me = store.profile;
   const pics = await allInlined();
   const ai = V('h3a', 'ainame') || 'My AI';
+  const blurb = V('h3a', 'blurb');
   const model = V('p1', 'model') || V('h2d', 'selected') || V('h2c', 'selected') || 'an open-source model';
   const lang = V('h3b', 'lang') || 'English';
   const file = V('h3c', 'file');
@@ -124,7 +125,8 @@ ul.refs li{margin-bottom:7px;font-size:16.5px}
 
 <section>
   <h2>Overview</h2>
-  <p><strong>${esc(ai)}</strong> is a chat AI that runs entirely on my own machine. No cloud, no subscription, no data leaving the room. I picked an open-source model and ran it locally with Ollama, gave it its own personality and reply language, taught it my own documents, and then deployed a public version that anyone can talk to.</p>
+  <p>${blurb ? `<strong>${esc(ai)}</strong> — ${esc(blurb)}</p>
+  <p>It` : `<strong>${esc(ai)}</strong> is a chat AI that`} runs entirely on my own machine. No cloud, no subscription, no data leaving the room. I picked an open-source model and ran it locally with Ollama, gave it its own personality and reply language, taught it my own documents, and then deployed a public version that anyone can talk to.</p>
   <p>The point of building it this way is control. The version on my laptop is free, offline and private — nobody can meter it, price it or switch it off.</p>
   <div class="facts">${facts.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</div>
 </section>
@@ -267,9 +269,14 @@ export function sharePost() {
   const model = V('p1', 'model') || 'an open-source model';
   const live = V('h4b', 'liveurl');
   const lang = V('h3b', 'lang') || 'English';
+  // Their own one-line description leads the post when they wrote one; the
+  // specs follow it rather than standing in for it.
+  const blurb = (V('h3a', 'blurb') || '').replace(/\s+/g, ' ').trim();
   return `I built my own AI today — and it runs entirely on my laptop.
 
-Meet ${ai}: ${model} running locally through Ollama, answering in ${lang}, grounded on my own documents. No cloud, no subscription, no data leaving my machine.
+Meet ${ai}${blurb ? ` — ${blurb}
+
+It's ` : ': '}${model} running locally through Ollama, answering in ${lang}, grounded on my own documents. No cloud, no subscription, no data leaving my machine.
 ${live ? '\nTry it: ' + live : ''}
 
 Three hours, from install to deployed, at ${CAMP.title} with DEVCON Philippines. Most of us use AI built somewhere else. Today I built one.
