@@ -1,6 +1,6 @@
 // The two things a participant can take away.
 //
-// buildDoc      — a portfolio write-up. Editorial, public, wrap-up withheld.
+// buildDoc      — a portfolio write-up. Editorial, public, feedback withheld.
 // buildProgress — a working record for the facilitator. Always available, so
 //                 nobody who stalls in Level 2 leaves with nothing to hand in.
 //
@@ -39,7 +39,7 @@ export async function buildDoc() {
     ['Replies in', lang],
     ['Grounded on', file || 'the bundled reference document'],
     ['Deployed with', 'Vercel'],
-    ['Built at', CAMP.title],
+    ['Built at', `${CAMP.title} · ${CAMP.event} · ${CAMP.date}`],
   ];
   const decision = (label, title, bodyHtml) =>
     bodyHtml ? `<div class="dec"><span class="lbl">${label}</span><h3>${title}</h3>${bodyHtml}</div>` : '';
@@ -164,7 +164,7 @@ ${V('h4d', 'hardest') ? `<section>
 <footer>
   <div class="grow">
     <span class="lbl">Verified completion</span>
-    <p style="margin:8px 0 0;font-size:16.5px">${esc(me.name)} completed all ${TOTAL} steps of ${esc(CAMP.title)} (${esc(CAMP.code)}) on ${esc(date)}.</p>
+    <p style="margin:8px 0 0;font-size:16.5px">${esc(me.name)} completed all ${TOTAL} steps of ${esc(CAMP.code)} — ${esc(CAMP.title)}, ${esc(CAMP.event)} — on ${esc(date)}.</p>
   </div>
   <span class="stamp"><b>VERIFIED</b><i>${esc(CAMP.code)} · ${TOTAL}/${TOTAL} STEPS</i></span>
 </footer>
@@ -279,7 +279,9 @@ Meet ${ai}${blurb ? ` — ${blurb}
 It's ` : ': '}${model} running locally through Ollama, answering in ${lang}, grounded on my own documents. No cloud, no subscription, no data leaving my machine.
 ${live ? '\nTry it: ' + live : ''}
 
-Three hours, from install to deployed, at ${CAMP.title} with DEVCON Philippines. Most of us use AI built somewhere else. Today I built one.
+Three hours, from install to deployed, at ${CAMP.title} (${CAMP.acronym}) with DEVCON Philippines. Most of us use AI built somewhere else. Today I built one.
 
-#AISaBarangay #DEVCON #OpenSource #AI #Philippines`;
+${CAMP.tagline}
+
+${CAMP.hashtags.join(' ')}`;
 }

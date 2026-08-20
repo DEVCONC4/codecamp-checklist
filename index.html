@@ -14,8 +14,13 @@
 <div class="gate" id="gate" hidden>
   <div class="card">
     <span class="eyebrow" id="gateCode">Codecamp</span>
+    <!-- Poster copy, filled from CAMP in main.js: the tagline here, then the
+         build-customize-deploy-contribute arc, the promise and the date below the
+         lede, so the sign-in card and the poster on the wall read as one event. -->
+    <p class="gatetag" id="gateTag"></p>
     <h2 id="gateTitle">Sign in to the camp</h2>
     <p id="gateLede">Your progress, answers and screenshots are saved to your account, so you can pick up on any machine in the room.</p>
+    <p class="gatemeta" id="gateMeta"></p>
     <div class="gatewarn" id="gateWarn" hidden></div>
 
     <div class="field" id="fName" hidden>
@@ -67,6 +72,8 @@
     <div class="masthead-in">
       <div class="brand">
         <h1 id="campTitle">Codecamp</h1>
+        <!-- The pill is the acronym; the h1 beside it is the expansion, and the
+             tooltip spells it out again for the mobile layout that hides it. -->
         <span class="code" id="campCode">—</span>
       </div>
       <nav class="tabs" role="tablist">

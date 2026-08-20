@@ -1,6 +1,6 @@
 import './styles.css';
 import { supabase, configured, bootFailure, authPreflight } from './supabase.js';
-import { CAMP } from './camp.js';
+import { CAMP, CAMP_NAME } from './camp.js';
 import { store, loadProfile, loadAll, flush, clearStore, isFacilitator } from './store.js';
 import { $, $$, toast, pill } from './ui.js';
 import { renderAll, wireGlobalKeys } from './steps.js';
@@ -247,9 +247,21 @@ async function signOut() {
 // ── boot ─────────────────────────────────────────────────────────────
 
 async function boot() {
+  // The acronym always travels with the words it stands for: on the gate and in
+  // the masthead the full title is immediately beside it, and the pill's tooltip
+  // repeats the expansion for the narrow layout that hides the title's neighbour.
   $('#gateCode').textContent = CAMP.title + ' · ' + CAMP.code;
+  $('#gateTag').textContent = CAMP.tagline;
+  // Three poster lines, in the poster's own order and wording. Newlines rather
+  // than markup, so this stays textContent and can't inject anything.
+  $('#gateMeta').textContent = [
+    CAMP.arc.join(' · '),
+    CAMP.promise,
+    `${CAMP.event} · ${CAMP.date} · ${CAMP.time} · with ${CAMP.partners.join(' and ')}`,
+  ].join('\n');
   $('#campTitle').textContent = CAMP.title;
   $('#campCode').textContent = CAMP.code;
+  $('#campCode').title = CAMP_NAME;
   setMode('signin');
 
   // Ask the project up front rather than letting thirty people discover a

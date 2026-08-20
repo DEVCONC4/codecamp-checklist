@@ -207,6 +207,21 @@ src/
 Everything lives in the `CAMP` object in `src/camp.js`. Proof types are `text`,
 `longtext`, `choice` (needs `options`) and `screenshot`.
 
+The head of that object is the camp's identity, taken off the DEVCON 17 poster so
+the app, the poster and the generated write-ups can't drift apart: `tagline`,
+`promise`, `arc`, `event`, `date`, `time`, `partners`, `hashtags`. The gate renders
+all of them; `doc.js` uses `event`, `date` and `hashtags`. Deliberately absent is a
+list of models — the step bodies own that, and a second list here would be a rival
+source of truth.
+
+**The acronym never appears alone.** `code` is `BAICC-2026`, and every surface that
+shows it puts the full name where the reader can see it: beside the `<h1>` in the
+masthead, after the title in the gate eyebrow, spelled out in the write-up's
+verified-completion line, and in the code pill's tooltip for the narrow layout that
+hides its neighbour. `CAMP_NAME` exports the one form allowed on its own —
+`BAICC (Barangay AI Code Camp)`. A new surface that can't fit the expansion should
+use `CAMP.title` instead of the acronym.
+
 **Optionality is derived, never declared:**
 
 ```js
@@ -279,14 +294,18 @@ every step, finished or not. This exists because the write-up is gated on
 finishing, and the people who stall in Level 2 are exactly the ones whose data is
 most useful. Nobody leaves with nothing to hand in.
 
-**Excel** (facilitator) has two sheets. *Roster* is one row per participant,
-including *Last activity* and a *Flags* column carrying the same tags the desk
-shows — so the follow-up list of keys to rotate survives the room emptying.
-*Submissions* is one row per field per participant, which pivots easily. If
-SheetJS fails to load it falls back to CSV. Facilitators' own rows are excluded
-from both sheets: staff answers are test data.
+**Excel** (facilitator) is one sheet, *Participants*, one row each, carrying
+only what gets read after the room empties. Identity and build first — Name,
+Model, Email, OS, GitHub, AI name, Live URL, GitHub repo URL, Completed — then
+the whole wrap-up and feedback block: Pace, Hardest part, Could build again,
+Would recommend, Stuck for, What next, Best bit, Feedback. That block is the
+planning data for the next camp, so it ships complete rather than sampled. Live
+signals — last activity, flags, per-step progress — stay in the desk, where they
+are actionable; the per-field dump is gone. If SheetJS fails to load it falls
+back to CSV with the same columns. Facilitators' own rows are excluded: staff
+answers are test data.
 
-A privacy split is enforced: `const PRIVATE = ['h4d']` keeps the wrap-up out of
+A privacy split is enforced: `const PRIVATE = ['h4d']` keeps wrap-up and feedback out of
 the public write-up. Pace ratings and "anything we should change" are facilitator
 feedback, not portfolio material — they still reach Excel and the progress
 report. The one exception is `h4d.hardest`, which surfaces in *What I learned*
@@ -304,7 +323,7 @@ already public and needs **rotating**, not moving. Nothing gates on that answer
 by design — an honest answer beats a gate people learn to click past — so the
 desk shouts about it instead. Each alert names who, and tapping a name opens
 them. The others are the CORS dead-end (`p2.restarted` = *Not yet*), publishing
-without a key, and anyone who says in the wrap-up that they never got it working.
+without a key, and anyone who says in wrap-up and feedback that they never got it working.
 Adding one is a row in the `ALERTS` table in `facilitator.js`.
 
 The **quiet column** is time since a participant's last write, from
@@ -441,7 +460,7 @@ operations, **the app wins** — this is a companion to it, not a replacement.
 ## Known gaps
 
 1. **Level 4 is thin.** A pull-request step was removed at the client's request,
-   leaving one deploy step plus a wrap-up against a full level. Expect dead air
+   leaving one deploy step plus wrap-up and feedback against a full level. Expect dead air
    near the end; consider extending Level 3 or adding a closing activity.
 2. **`p2` and `h2b` are pure self-report.** Neither has a screenshot, so nothing
    independently verifies them. Acceptable because Level 2 fails loudly if either

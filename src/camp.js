@@ -20,7 +20,22 @@
 
 export const CAMP = {
   title: 'Barangay AI Code Camp',
-  code: 'AISB-2026',
+  // BAICC is Barangay AI Code Camp. The acronym is never shown on its own:
+  // every render below either sits beside the full title or spells it out in
+  // parentheses, because a bare five letters means nothing to someone at their
+  // first camp. If a new surface can't fit the expansion, use CAMP.title there.
+  acronym: 'BAICC',
+  code: 'BAICC-2026',
+  // Straight off the DEVCON 17 poster, so the app, the poster and the generated
+  // write-ups all say the same thing. Poster copy is the source of truth here.
+  tagline: 'AI-deya Mo. Libre at Abot Kaya!',
+  promise: 'Run AI 100% locally in your device!',
+  arc: ['Build', 'Customize', 'Deploy', 'Contribute'],
+  event: 'DEVCON 17',
+  date: 'August 27, 2026',
+  time: '4:00 – 7:00 PM',
+  partners: ['nmblr', 'Sui'],
+  hashtags: ['#AISaBarangay', '#DEVCON17', '#BarangayAICodeCamp', '#OpenSource', '#AI', '#Philippines'],
   modules: [
     {
       id: 'm0',
@@ -548,7 +563,7 @@ git push">Copy</button></div>`,
         },
         {
           id: 'h4d',
-          title: 'Wrap up',
+          title: 'Wrap up and feedback',
           minutes: 10,
           body: `
             <div class="callout"><strong>Remember which one is the real one.</strong> The shared link runs on somebody else's computer, using a hosted model. The AI on <em>your</em> machine is the one that's free, offline, and private — nobody can meter it, price it, or switch it off. That's the one you actually built today.</div>
@@ -572,6 +587,10 @@ git push">Copy</button></div>`,
 };
 
 // Flattened, with optionality derived rather than declared.
+// The only form the acronym is allowed to take where the full title isn't
+// already on screen next to it: BAICC (Barangay AI Code Camp).
+export const CAMP_NAME = `${CAMP.acronym} (${CAMP.title})`;
+
 export const STEPS = CAMP.modules.flatMap((m) =>
   m.steps.map((s) => ({
     ...s,
@@ -590,6 +609,6 @@ export const stepNumber = (id) => {
   return i < 0 ? '—' : String(i + 1).padStart(2, '0');
 };
 
-// Wrap-up is facilitator feedback, not portfolio material. It flows to the
-// roster and the spreadsheet but never into the public write-up.
+// Wrap-up and feedback is facilitator material, not portfolio material. It flows
+// to the roster and the spreadsheet but never into the public write-up.
 export const PRIVATE = ['h4d'];

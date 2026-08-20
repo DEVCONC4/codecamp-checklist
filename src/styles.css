@@ -55,6 +55,14 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 .gate .card{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:32px 30px;box-shadow:var(--shadow)}
 .gate h2{font-size:27px;margin-bottom:6px}
 .gate>.card>p{color:var(--ink-soft);margin:0 0 24px}
+/* Poster copy on the sign-in card. Both are empty until main.js fills them from
+   CAMP, and :empty keeps the margins from collapsing into a gap if it can't.
+   Selected through .card>p rather than by class alone: the generic .gate>.card>p
+   rule above is more specific than a bare class and would otherwise win on both
+   colour and margin. */
+.gate>.card>p.gatetag{font-family:var(--display);font-weight:700;font-style:italic;font-size:16px;color:var(--stamp);margin:6px 0 14px}
+.gate>.card>p.gatemeta{font-family:var(--mono);font-size:11.5px;line-height:1.9;letter-spacing:.05em;color:var(--ink-faint);white-space:pre-line;margin:0 0 22px;padding-top:14px;border-top:1.5px solid var(--rule)}
+.gate>.card>p.gatetag:empty,.gate>.card>p.gatemeta:empty{display:none}
 .field{margin-bottom:16px}
 .field label{display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
 .field input,.field textarea,.field select{width:100%;background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:10px 12px;font-family:var(--body);font-size:16px}

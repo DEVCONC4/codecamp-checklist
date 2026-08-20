@@ -52,7 +52,7 @@ const ALERTS = [
     step: 'h4d', key: 'stuck', is: 'I never got it working',
     level: 'bad', tag: 'NEVER RAN',
     title: 'Says they never got it working',
-    what: 'They are filling in the wrap-up having never seen it run. Catch them before they leave the room.',
+    what: 'They are filling in wrap-up and feedback having never seen it run. Catch them before they leave the room.',
   },
   {
     step: 'p2', key: 'restarted', is: 'Not yet',
@@ -483,30 +483,30 @@ export async function openParticipant(userId) {
 
 // ── spreadsheet ──────────────────────────────────────────────────────
 
+// One sheet, one row per participant: who they are, what they built, where it
+// lives, whether they finished, and the whole wrap-up and feedback block — the
+// eight answers that are the only reason to open this file weeks later. Live
+// signals stay in the desk UI, where they are actionable; the old per-field
+// dump is gone.
 export async function exportXlsx() {
-  const rosterAoa = [[
-    'Name', 'Email', 'OS', 'GitHub', 'AI name', 'Model', 'Language', 'Live URL', 'Repo',
-    'Steps stamped', 'Steps total', 'Status', 'Completed', 'Last activity', 'Flags',
-    'Pace', 'Hardest level', 'Could build again', 'Would recommend', 'Stuck for',
-    'What next', 'Best bit', 'Feedback',
+  const aoa = [[
+    'Name', 'Model', 'Email', 'OS', 'GitHub', 'AI name',
+    'Live URL', 'GitHub repo URL', 'Completed',
+    'Pace', 'Hardest part', 'Could build again', 'Would recommend',
+    'Stuck for', 'What next', 'Best bit', 'Feedback',
   ]];
-  const subsAoa = [['Participant', 'OS', 'Step #', 'Step', 'Module', 'Field', 'Answer', 'Stamped at']];
 
   for (const p of roster) {
-    const n = doneCount(p.id);
-    rosterAoa.push([
-      p.name || '', p.email || '', p.os || '',
+    aoa.push([
+      p.name || '',
+      field(p.id, 'p1', 'model'),
+      p.email || '',
+      p.os || '',
       field(p.id, 'p3', 'gh'),
       field(p.id, 'h3a', 'ainame'),
-      field(p.id, 'p1', 'model'),
-      field(p.id, 'h3b', 'lang'),
       field(p.id, 'h4b', 'liveurl'),
       field(p.id, 'h4a', 'repo'),
-      n, TOTAL,
-      n >= TOTAL ? 'Complete' : 'In progress',
-      n >= TOTAL && p.last_stamp_at ? new Date(p.last_stamp_at).toLocaleString() : '',
-      p.last_activity_at ? new Date(p.last_activity_at).toLocaleString() : '',
-      flagsFor(p.id).map((f) => f.tag).join(' '),
+      doneCount(p.id) >= TOTAL ? 'Yes' : 'No',
       field(p.id, 'h4d', 'pace'),
       field(p.id, 'h4d', 'hardest'),
       field(p.id, 'h4d', 'again'),
@@ -518,31 +518,16 @@ export async function exportXlsx() {
     ]);
   }
 
-  const order = new Map(STEPS.map((s, i) => [s.id, i]));
-  for (const row of [...subs].sort((a, b) =>
-    (a.name || '').localeCompare(b.name || '') || (order.get(a.step_id) ?? 99) - (order.get(b.step_id) ?? 99))) {
-    const s = stepById(row.step_id);
-    if (!s) continue;
-    subsAoa.push([
-      row.name || '', row.os || '',
-      stepNumber(s.id), s.title, s.module,
-      LABEL[`${row.step_id}.${row.field_key}`] || row.field_key,
-      row.value || '',
-      row.done_at ? new Date(row.done_at).toLocaleString() : '',
-    ]);
-  }
-
   const name = `${slug(CAMP.code)}-submissions`;
   try {
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rosterAoa), 'Roster');
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(subsAoa), 'Submissions');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Participants');
     XLSX.writeFile(wb, name + '.xlsx');
-    toast('Workbook downloaded — Roster and Submissions sheets');
+    toast(`Workbook downloaded — ${roster.length} participant${roster.length === 1 ? '' : 's'}`);
   } catch {
-    const csv = rosterAoa.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-    download(new Blob(['﻿' + csv], { type: 'text/csv' }), name + '.csv');
-    toast("Excel library didn't load — exported the roster as CSV");
+    const csv = aoa.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    download(new Blob(['\ufeff' + csv], { type: 'text/csv' }), name + '.csv');
+    toast("Excel library didn't load — exported as CSV instead");
   }
 }
