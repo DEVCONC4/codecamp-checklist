@@ -7,9 +7,9 @@ structured proof-of-completion capture on the other.
 Vite + vanilla JS on the front, Supabase (Postgres + Auth + Storage) behind it.
 No framework, no server of your own.
 
-- **Participants** work 16 steps in order, submitting answers and screenshots as
+- **Participants** work 19 steps in order, submitting answers and screenshots as
   they go. *Next step* is what stamps a step, and only unlocks once every
-  required proof on it is in. All 16 required steps stamped, and a shareable
+  required proof on it is in. All 19 required steps stamped, and a shareable
   project write-up unlocks.
 - **Facilitators** get per-step mentor notes and a live view of the whole room:
   who to walk to next, where the room is stuck, and any one person's answers and
@@ -190,7 +190,7 @@ showing inline under each step.
 
 ```
 src/
-├── camp.js         all 16 steps — the only file you edit to change the camp
+├── camp.js         all 19 steps — the only file you edit to change the camp
 ├── supabase.js     client + a legible failure when .env is missing
 ├── store.js        the only module that talks to Postgres and Storage
 ├── steps.js        the working surface: prose, proofs, stamping
@@ -230,16 +230,16 @@ optional: !s.proofs.some(p => p.required)
 
 A step with no required proof drops out of the completion gate automatically and
 renders a dashed sidebar dot. The consequence worth remembering: strip the last
-`required: true` proof from a step and it silently stops counting toward the 16.
+`required: true` proof from a step and it silently stops counting toward the 19.
 
 No step is optional right now: the old optional cloud-model step became required
-when the connect-a-model walkthrough absorbed it, so all 16 count. The *Skip this
+when the connect-a-model walkthrough absorbed it, so all 19 count. The *Skip this
 step* path is live code that nothing currently exercises.
 
 Step IDs are load-bearing — `doc.js` and `facilitator.js` look up specific
 fields by `stepId.key`, so renaming one means updating those lookups.
 
-Three proof fields are deliberately comprehension checks rather than data entry:
+Five proof fields are deliberately comprehension checks rather than data entry:
 
 - `h4b.keywhere` offers "In a file in my repo" as a pickable answer. Anyone who
   picks it needs their key rotated, not moved — the mentor note says so.
@@ -249,6 +249,13 @@ Three proof fields are deliberately comprehension checks rather than data entry:
   Impossible to produce without opening it — which is the moment "grounded, not
   trained" lands, and where the retrieved chunks visibly outweigh the question
   that was asked.
+- `h2e.survived` offers "Gone — the list was empty" as a pickable answer,
+  because a browser that refuses to persist anything is a real result and worth
+  a facilitator rather than a retry. Nothing gates on it; the desk raises it.
+- `h2f.shot` asks for the whole screen, wifi indicator included. A photo of the
+  app answering proves nothing on its own — the disconnected icon in the same
+  frame is the evidence, and it can't be produced without actually going
+  offline.
 
 Design new fields the same way: prefer a question that can't be answered without
 doing the thing.
@@ -285,13 +292,13 @@ enforced would otherwise have their own finished answers hidden behind a preview
 
 ### The two exports, and why they differ
 
-**Project documentation** (participant, unlocks at 15/15) is a portfolio piece —
+**Project documentation** (participant, unlocks at 19/19) is a portfolio piece —
 hero, key decisions, a module-by-module build log with screenshots, references.
 Self-contained HTML with images inlined as data URIs; prints cleanly to PDF.
 
 **Progress report** (participant, always available) is the working record:
 every step, finished or not. This exists because the write-up is gated on
-finishing, and the people who stall in Level 2 are exactly the ones whose data is
+finishing, and the people who stall in Sprint 2 are exactly the ones whose data is
 most useful. Nobody leaves with nothing to hand in.
 
 **Excel** (facilitator) is one sheet, *Participants*, one row each, carrying
@@ -323,7 +330,9 @@ already public and needs **rotating**, not moving. Nothing gates on that answer
 by design — an honest answer beats a gate people learn to click past — so the
 desk shouts about it instead. Each alert names who, and tapping a name opens
 them. The others are the CORS dead-end (`p2.restarted` = *Not yet*), publishing
-without a key, and anyone who says in wrap-up and feedback that they never got it working.
+without a key, a browser that keeps nothing across a reload (`h2e.survived` =
+*Gone*, which will also eat their settings, sources and published file), and
+anyone who says in wrap-up and feedback that they never got it working.
 Adding one is a row in the `ALERTS` table in `facilitator.js`.
 
 The **quiet column** is time since a participant's last write, from
@@ -395,7 +404,7 @@ and an `href(text, url)`.
 On the last step (`h4d`) that same button reads **Finish →**: it stamps the step
 like any other, then hands over to *My project* — where the documentation, the
 share sheet and the progress report all live. The handover is deliberately not
-gated on 15/15, because a step can be stamped out of order on older data:
+gated on 19/19, because a step can be stamped out of order on older data:
 someone who has not finished still lands on the page that tells them what is
 left, with their progress report downloadable either way.
 
@@ -409,9 +418,9 @@ bucket. The first path segment is the owner, which is what every storage policy
 keys off. Paste is refused on a step that has not opened yet — see *Stamping, and
 the order steps open in*.
 
-Ten of the 16 steps take a screenshot: `p1`, `p3`, `h1c`, `h2a`, `h2c`,
-`h2d`, `h3a`, `h3c`, `h4a`, `h4b` — eleven fields in all, because `h3c` takes
-two. The rule is that an image earns its place when it shows something no field
+Thirteen of the 19 steps take a screenshot: `p1`, `p3`, `h1c`, `h2a`, `h2c`,
+`h2d`, `h2e`, `h2f`, `h3a`, `h3c`, `h3d`, `h4a`, `h4b` — fourteen fields in all,
+because `h3c` takes two. The rule is that an image earns its place when it shows something no field
 can assert — a URL you can click is better evidence than a photo of a page.
 
 `h3c` is also the only step where paste has to choose a field. Ctrl/Cmd+V files
@@ -423,25 +432,82 @@ paste doesn't pass unnoticed.
 
 ## Design language
 
-A workshop logbook: riso-style duotone on cool oat paper. Don't restyle without
-reason.
+The official DEVCON 17 identity, applied as a poster system rather than as
+stationery. Don't restyle without reason, and don't introduce a fourth hue.
 
 ```
-paper #EDEFE8 · panel #E4E7DE · ink #17211C · soft #5D6A62 · rule #C6CCBD
-viridian (verified) #17594A + tint #D9E6DF
-ink-pink (required/alert) #B8244A + tint #F2DCE2
+white  #FFFFFF   ground
+purple #4725BA   primary - headlines, controls, progress, the VERIFIED seal
+gold   #E8CA04   accent - the acronym badge, the finish state, progress edges
 ```
 
-Space Grotesk for headings, Newsreader for body prose, JetBrains Mono for
-labels, step numbers, status pills and all uppercase micro-copy. The downloaded
-write-up uses the same palette on a lighter ground (`#F7F8F4`) with larger
-display type, because it's an editorial piece rather than a working tool.
+```
+derived  panel #F6F3FD  panel-2 #EAE3F9  ink #1C0F4A  soft #574C7A
+         faint #8981A8  rule #E4DDF5  stamp-tint #EDE7FB  gold-tint #FDF6D2
+warn     #7A6600 + tint #FCF3C9   - the gold hue pushed to text contrast
+flag     #C8102E + tint #FBE7EA   - the one deliberate exception
+```
 
-The stamp is the signature element. Completing a step presses a rotated viridian
-VERIFIED stamp carrying the step number and timestamp, animated with a
-scale-and-rotate press that respects `prefers-reduced-motion`. It reappears in
-the review sheet and both downloads. Keep it — it's what makes the artifact feel
-like a credential.
+`--flag` is red rather than a second gold on purpose: "blocked" has to read as
+different from "worth a look" from the front of a room, and gold cannot carry
+both. Everything else stays inside the three.
+
+### The four form devices
+
+The palette is only half of it. The form comes from the DEVCON 17 key visual,
+and four devices carry it. Anything added to the app should use them rather than
+inventing a fifth:
+
+1. **Fills and elevation, not outlines.** Almost nothing has a border. Panels
+   are flat tinted shapes lifted off the ground by soft purple shadow (`--lift`,
+   `--lift-2`), which is why the radii are large — 12px on controls, 14–22px on
+   panels — and the few hairlines left are quiet `--rule`.
+2. **Pills.** Every control is fully rounded: buttons, tabs, segments, chips,
+   status pills, the acronym badge, the toast.
+3. **The purple-to-gold transition** (`--grad`), used as a mark of progress and
+   never as decoration. It appears in exactly five places: the leading edge of
+   the progress rail, the short bar under a section heading, the top edge of a
+   command block, the avatar, and the write-up's title rule. Note the rail is a
+   *solid purple bar with a gold leading edge* rather than a gradient fill — a
+   gradient compressed into a 10%-wide bar reads as a bug.
+4. **The gold four-point sparkle**, the brand's own decorative element, as a
+   data-URI mask in `--spark` so it inherits `currentColor`. Used only where
+   something is titled or finished: module labels, the finish panel, the seal.
+
+### Type
+
+Montserrat ExtraBold (800) for headings — the kit's own fallback for Proxima
+Nova Extrabold, which isn't a web font — at the brand's **92% leading** on every
+display-sized headline, and `.95` elsewhere so two-line UI headings don't
+collide. Inter for prose.
+
+**Micro-labels are Montserrat, not mono, and this matters more than the
+palette.** Mono is now reserved for things that are literally code or literally
+numbers: commands, keyboard keys, step counts, timestamps, file paths, URLs. A
+mono label on a status pill reads as a machine log, and this is a room full of
+people. If you add a label, it goes in Montserrat 800 uppercase.
+
+### The seal
+
+The stamp is the signature element. Completing a step presses a rotated
+**single-colour purple** VERIFIED seal — the brand sparkle, the word, the step
+number and timestamp, all in the one ink, because that is what a seal is. It
+animates with a scale-and-rotate press that respects `prefers-reduced-motion`,
+and reappears in the review sheet and both downloads. Keep it; it's what makes
+the artifact feel like a credential.
+
+### The two background modes
+
+Both of the brand's modes are in use, as the kit describes them. The sign-in
+gate runs **purple ground, white headline, gold key phrase**, with concentric
+rings from the key visual behind it — it's the one screen nobody works in, so it
+gets to look like the poster on the wall. The app itself runs **white ground,
+purple headlines, gold accents**, because a three-hour working session is not a
+poster. Gold is never body text; at 4.7:1 against white it cannot be.
+
+Both downloads share the palette and the devices. The write-up takes the larger
+display setting because it's an editorial piece rather than a working tool.
+
 
 **Copy voice:** plain, second person, active. Name the trade-off rather than
 hiding it. No exclamation marks, no "simply", no praise the participant hasn't
@@ -459,20 +525,32 @@ operations, **the app wins** — this is a companion to it, not a replacement.
 
 ## Known gaps
 
-1. **Level 4 is thin.** A pull-request step was removed at the client's request,
-   leaving one deploy step plus wrap-up and feedback against a full level. Expect dead air
-   near the end; consider extending Level 3 or adding a closing activity.
-2. **`p2` and `h2b` are pure self-report.** Neither has a screenshot, so nothing
-   independently verifies them. Acceptable because Level 2 fails loudly if either
+1. **Sprint 4 is thin.** A pull-request step was removed at the client's request,
+   leaving one deploy step plus wrap-up and feedback against a full sprint — and
+   the app still promises a PR in its own guidebook (*Hour 4 … open your first
+   Pull Request*), which is the one place the app and this checklist disagree
+   without the app winning. Deliberate, not an oversight. Sprint 2 and Sprint 3
+   were extended instead (`h2e`, `h2f`, `h3d`), so the dead air now sits only at
+   the very end.
+2. **The step budget overruns the room.** `minutes` across the 19 steps totals
+   280, of which 45 is pre-camp — leaving 235 against a 180-minute camp. It was
+   already over before `h2e`, `h2f` and `h3d` added 30. Those estimates are
+   generous per step and drive nothing but the desk's quiet-column thresholds, so
+   this is a planning number rather than a bug: decide in advance what gets cut
+   live. `h2e` and the persona half of `h3d` are the cheapest to drop, `h2f` is
+   the one worth protecting — it is the only step that demonstrates the camp's
+   central claim.
+3. **`p2` and `h2b` are pure self-report.** Neither has a screenshot, so nothing
+   independently verifies them. Acceptable because Sprint 2 fails loudly if either
    was skipped and `h2c`'s screenshot catches it — but the data can't stand alone.
-3. **Screenshots soften at 1280px / 0.72.** Fine for chat UIs, occasionally lossy
+4. **Screenshots soften at 1280px / 0.72.** Fine for chat UIs, occasionally lossy
    on small terminal text. Raise it in `shrink()` if legibility complaints appear.
-4. **Realtime needs `0002`.** Without that migration the desk shows "Manual
+5. **Realtime needs `0002`.** Without that migration the desk shows "Manual
    refresh" and refetches on a 30-second timer instead of on change — slower to
    notice a stamp, but not dependent on the Refresh button. With realtime on, the
    same timer re-renders without refetching, because how long someone has been
    quiet changes while nothing happens.
-5. **Email confirmation.** Leave it on and signups fail with a rate-limit error
+6. **Email confirmation.** Leave it on and signups fail with a rate-limit error
    — `429 over_email_send_rate_limit`, shown as *"Too many attempts just now"* —
    after roughly the second account, because Supabase is trying to mail every
    undeliverable `.test` address through a shared SMTP capped at a couple of

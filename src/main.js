@@ -7,12 +7,6 @@ import { renderAll, wireGlobalKeys } from './steps.js';
 import { renderRecord } from './record.js';
 import { loadRoom, renderRoom, exportXlsx, subscribeRoom, unsubscribeRoom } from './facilitator.js';
 
-if (!configured) {
-  bootFailure();
-} else {
-  boot();
-}
-
 // ── views ────────────────────────────────────────────────────────────
 
 export function show(view) {
@@ -294,9 +288,30 @@ async function boot() {
     else leave();
   });
 
-  const { data } = await supabase.auth.getSession();
-  if (data.session?.user) enter(data.session.user);
+  // A failed session lookup is not a reason to show nothing: an expired or
+  // unreachable session is exactly when someone needs the sign-in form.
+  let session = null;
+  try {
+    ({ data: { session } } = await supabase.auth.getSession());
+  } catch {
+    session = null;
+  }
+  if (session?.user) enter(session.user);
   else leave();
+}
+
+// Last resort. Uses the same panel as a missing .env, because to whoever is
+// running the room it is the same class of problem — the app cannot start, and
+// the reason has to be on the screen rather than in devtools.
+function bootCrash(err) {
+  console.error('[camp] boot failed', err);
+  document.body.innerHTML = `
+    <div class="bootfail">
+      <h2>The app couldn't start</h2>
+      <p>Something failed while loading the camp. Reloading the page usually
+         clears it; if it doesn't, this is the error:</p>
+      <p style="margin-bottom:0"><code>${String(err && err.message || err)}</code></p>
+    </div>`;
 }
 
 let entered = null;
@@ -330,7 +345,12 @@ async function enter(user) {
     }
     await loadAll(user.id);
   } catch (e) {
+    // Back to the gate, not to nothing. msg() writes into #authMsg, which lives
+    // inside #gate — leaving it hidden here left the page blank and the reason
+    // with it.
     entered = null;
+    $('#app').hidden = true;
+    $('#gate').hidden = false;
     msg('Signed in, but loading your data failed: ' + e.message);
     return;
   }
@@ -345,4 +365,18 @@ async function enter(user) {
   pill('Ready');
   show('steps');
   renderAll();
+}
+
+// ── start ────────────────────────────────────────────────────────────
+// Last statement in the file on purpose. boot() runs synchronously until its
+// first await, so calling it any earlier than this reaches `mode` and `entered`
+// before their declarations have been evaluated — a temporal dead zone throw,
+// swallowed as an unhandled rejection, which is precisely a blank page.
+//
+// Both #gate and #app ship hidden, so every path out of boot() has to reveal
+// one of them; .catch is the backstop for the ones that don't.
+if (!configured) {
+  bootFailure();
+} else {
+  boot().catch(bootCrash);
 }

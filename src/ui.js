@@ -40,13 +40,18 @@ export function zoom(src) {
   const lb = document.createElement('div');
   lb.className = 'lightbox';
   lb.innerHTML = `<img src="${esc(src)}" alt="">`;
-  lb.addEventListener('click', () => lb.remove());
-  document.addEventListener('keydown', function onKey(ev) {
-    if (ev.key === 'Escape') {
-      lb.remove();
-      document.removeEventListener('keydown', onKey);
-    }
-  });
+  // One close path for both ways out, so the keydown listener is always
+  // unbound. Removing it only on the Escape branch leaked a document-level
+  // listener every time a lightbox was dismissed by clicking instead.
+  const close = () => {
+    lb.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  function onKey(ev) {
+    if (ev.key === 'Escape') close();
+  }
+  lb.addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
   document.body.appendChild(lb);
 }
 

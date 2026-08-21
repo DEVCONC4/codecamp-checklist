@@ -1,194 +1,316 @@
-/* Workshop logbook: riso-style duotone on cool oat paper. */
+/* DEVCON 17, as a poster system rather than a ruled logbook.
+   ─────────────────────────────────────────────────────────────────────
+   The palette is the official three-colour system — white #FFFFFF, DEVCON
+   purple #4725BA, gold #E8CA04 — and everything else here is a tint, a shade or
+   a purple-to-gold transition between them, which the brand kit sanctions
+   explicitly. Nothing new enters the palette. The one deliberate exception is
+   --flag: "blocked" has to read as different from "worth a look" from the front
+   of a room, and a second gold cannot carry both.
+
+   The FORM comes from the key visual, not from stationery. Four devices carry
+   it, and they are worth knowing before editing:
+
+     1. Fills and elevation instead of outlines. Almost nothing has a border.
+        Panels are flat tinted shapes lifted off the ground by soft purple
+        shadow, which is why the radii are large (14-22px) and the few hairlines
+        left are quiet.
+     2. Pills. Every control - button, tab, chip, segment, status - is fully
+        rounded.
+     3. The purple-to-gold transition, as a mark of progress and never as
+        decoration: the leading edge of a progress bar, the short bar under a
+        section heading, the top edge of a command block, the avatar.
+     4. The gold four-point sparkle, the brand's own decorative element, as a
+        data-URI mask in --spark. Only where something is finished or titled.
+
+   Micro-labels are set in Montserrat, not mono. Mono is now reserved for things
+   that are literally code or literally numbers - commands, keys, step counts,
+   file paths. That single reassignment does more to change the feel than the
+   palette does, so keep it: a mono label on a status pill reads as a machine
+   log, and this is a room full of people.
+
+   Type is Montserrat ExtraBold at the brand's 92% leading on display-sized
+   headlines, .95 elsewhere so two-line UI headings do not collide, with Inter
+   for prose. */
 :root{
-  --paper:#EDEFE8;
-  --panel:#E4E7DE;
-  --panel-2:#DADED1;
-  --ink:#17211C;
-  --ink-soft:#5D6A62;
-  --ink-faint:#8B968E;
-  --rule:#C6CCBD;
-  --stamp:#17594A;
-  --stamp-tint:#D9E6DF;
-  --flag:#B8244A;
-  --flag-tint:#F2DCE2;
-  --warn:#9A5B12;
-  --warn-tint:#EFE3D0;
-  --display:'Space Grotesk',ui-sans-serif,system-ui,sans-serif;
-  --body:'Newsreader',Georgia,serif;
+  --paper:#FFFFFF;
+  --panel:#F6F3FD;
+  --panel-2:#EAE3F9;
+  --ink:#1C0F4A;
+  --ink-soft:#574C7A;
+  --ink-faint:#8981A8;
+  --rule:#E4DDF5;
+  --stamp:#4725BA;
+  --stamp-deep:#38199A;
+  --stamp-tint:#EDE7FB;
+  --gold:#E8CA04;
+  --gold-tint:#FDF6D2;
+  --flag:#C8102E;
+  --flag-tint:#FBE7EA;
+  --warn:#7A6600;
+  --warn-tint:#FCF3C9;
+  --grad:linear-gradient(90deg,var(--stamp) 0%,#8A4FD0 55%,var(--gold) 100%);
+  --display:'Montserrat',ui-sans-serif,system-ui,sans-serif;
+  --body:'Inter',ui-sans-serif,system-ui,-apple-system,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,monospace;
-  --shadow:0 1px 0 var(--rule), 0 8px 24px -18px rgba(23,33,28,.5);
+  /* Elevation does the work borders used to. Two steps only: resting, lifted. */
+  --lift:0 1px 2px rgba(28,15,74,.04), 0 8px 24px -14px rgba(28,15,74,.16);
+  --lift-2:0 2px 6px rgba(28,15,74,.06), 0 22px 48px -22px rgba(28,15,74,.28);
+  /* The brand's four-point sparkle, as a mask so it takes currentColor. */
+  --spark:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0L14.3 9.7 24 12 14.3 14.3 12 24 9.7 14.3 0 12 9.7 9.7Z' fill='%23000'/%3E%3C/svg%3E");
+  /* The kit's other two named decorative elements, as background layers rather
+     than pseudo-elements so they can be stacked without fighting content for
+     paint order. Both come in a version for each background mode.
+
+       --rings-*  concentric ring ripple, the signature background element
+       --dots-*   digital particle scatter, "used sparingly" per the kit
+
+     Every alpha in here is deliberately at the bottom of the visible range.
+     If you can see these without looking for them, they are too strong. */
+  --rings-ink:repeating-radial-gradient(circle at center,rgba(71,37,186,.05) 0 1px,transparent 1px 24px);
+  --rings-light:repeating-radial-gradient(circle at center,rgba(255,255,255,.07) 0 1px,transparent 1px 24px);
+  --dots-ink:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='%234725BA' fill-opacity='.42'%3E%3Ccircle cx='18' cy='34' r='2'/%3E%3Ccircle cx='96' cy='12' r='1.5'/%3E%3Ccircle cx='170' cy='58' r='2.5'/%3E%3Ccircle cx='40' cy='128' r='1.5'/%3E%3Ccircle cx='134' cy='168' r='2'/%3E%3C/g%3E%3Cg fill='%23E8CA04' fill-opacity='.75'%3E%3Ccircle cx='64' cy='72' r='2'/%3E%3Ccircle cx='198' cy='22' r='2.5'/%3E%3Ccircle cx='12' cy='190' r='2'/%3E%3Ccircle cx='112' cy='108' r='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  --dots-light:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='%23FFFFFF' fill-opacity='.34'%3E%3Ccircle cx='18' cy='34' r='2'/%3E%3Ccircle cx='96' cy='12' r='1.5'/%3E%3Ccircle cx='170' cy='58' r='2.5'/%3E%3Ccircle cx='40' cy='128' r='1.5'/%3E%3Ccircle cx='134' cy='168' r='2'/%3E%3Ccircle cx='64' cy='72' r='2'/%3E%3Ccircle cx='198' cy='22' r='2.5'/%3E%3Ccircle cx='12' cy='190' r='2'/%3E%3Ccircle cx='112' cy='108' r='1.5'/%3E%3C/g%3E%3C/svg%3E");
+  /* Sparkles with the fill baked in, for use as a background layer where a
+     mask would need a pseudo-element it cannot have. */
+  --spark-gold:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0L14.3 9.7 24 12 14.3 14.3 12 24 9.7 14.3 0 12 9.7 9.7Z' fill='%23E8CA04'/%3E%3C/svg%3E");
+  --spark-white:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0L14.3 9.7 24 12 14.3 14.3 12 24 9.7 14.3 0 12 9.7 9.7Z' fill='%23FFFFFF' fill-opacity='.5'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{background-color:var(--paper);color:var(--ink);font-family:var(--body);font-size:16.5px;line-height:1.62;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(820px 460px at 4% -8%,rgba(71,37,186,.055),transparent 68%),radial-gradient(700px 400px at 99% 1%,rgba(232,202,4,.05),transparent 70%);
+  background-repeat:no-repeat;background-attachment:fixed}
 button,input,textarea,select{font:inherit;color:inherit}
-a{color:var(--stamp)}
-.eyebrow{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
-.mono{font-family:var(--mono)}
-h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margin:0}
+a{color:var(--stamp);text-underline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-height:.95;margin:0}
 [hidden]{display:none !important}
 
+/* Micro-labels. Montserrat, not mono - see the note at the top of the file. */
+.eyebrow{font-family:var(--display);font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.mono{font-family:var(--mono)}
+
 /* ---------- shell ---------- */
-.masthead{border-bottom:1.5px solid var(--ink);background:var(--paper);position:sticky;top:0;z-index:40}
-.masthead-in{max-width:1240px;margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
-.brand{display:flex;align-items:baseline;gap:12px;margin-right:auto}
-.brand h1{font-size:19px}
-.brand .code{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;border:1.5px solid var(--ink);border-radius:3px;padding:2px 7px}
-.tabs{display:flex;gap:2px;background:var(--panel-2);padding:3px;border-radius:4px}
-.tab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:none;border:0;cursor:pointer;padding:7px 12px;border-radius:3px;color:var(--ink-soft)}
-.tab[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
-.who{display:flex;align-items:center;gap:9px}
-.who .avatar{width:30px;height:30px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:700}
-.who small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
-.who strong{font-family:var(--display);font-size:14px}
+.masthead{background:rgba(255,255,255,.88);backdrop-filter:saturate(1.4) blur(10px);position:sticky;top:0;z-index:40}
+.masthead-in{max-width:1240px;margin:0 auto;padding:15px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;margin-right:auto}
+.brand h1{font-size:19px;color:var(--stamp)}
+/* The acronym as a badge, the way the 17 mark sits on a white layout. */
+.brand .code{font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.1em;background:var(--gold);color:var(--ink);border-radius:999px;padding:4px 10px}
+.tabs{display:flex;gap:3px;background:var(--panel);padding:4px;border-radius:999px}
+.tab{font-family:var(--display);font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;background:none;border:0;cursor:pointer;padding:8px 15px;border-radius:999px;color:var(--ink-soft);transition:background .16s ease,color .16s ease}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--stamp);color:#fff}
+.who{display:flex;align-items:center;gap:10px}
+/* The one place the purple-to-gold transition is worn by a person. */
+.who .avatar{width:34px;height:34px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:12px;font-weight:800}
+.who small{display:block;font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.who strong{font-family:var(--display);font-weight:700;font-size:14px}
 .who .whoname{min-width:0}
 .who [data-signout]{margin-left:5px}
 @media (max-width:640px){.who .whoname{display:none}}
-.rail{height:5px;background:var(--panel-2);position:relative;overflow:hidden}
-.rail>i{display:block;height:100%;width:0;background:var(--stamp);transition:width .5s cubic-bezier(.2,.8,.3,1)}
-.rail>i::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.22) 0 6px,transparent 6px 12px)}
+/* Progress: a purple bar with a gold leading edge, so the transition travels
+   with the room instead of being squeezed into whatever width it has reached. */
+.rail{height:4px;background:var(--panel-2);position:relative;overflow:hidden}
+.rail>i{display:block;height:100%;width:0;background:var(--stamp);position:relative;transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.rail>i::after{content:"";position:absolute;top:0;bottom:0;right:0;width:40px;background:linear-gradient(90deg,transparent,var(--gold))}
 .wrap{max-width:1240px;margin:0 auto;padding:0 22px 90px}
 .view[hidden]{display:none}
 
 /* ---------- gate ---------- */
-.gate{max-width:520px;margin:8vh auto;padding:0 22px}
-.gate .card{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:32px 30px;box-shadow:var(--shadow)}
-.gate h2{font-size:27px;margin-bottom:6px}
-.gate>.card>p{color:var(--ink-soft);margin:0 0 24px}
+/* The sign-in field. The card was floating on a near-white page, which left the
+   brand doing nothing on the one screen that is pure identity — so the whole
+   viewport takes the purple background mode and the card sits on it as a lit
+   panel. Layer order, top of the list paints first:
+
+     1  ring ripple, 900px, centred behind the card — the signature element at
+        field scale rather than the card-sized one the card carries itself
+     2  particle scatter
+     3  purple bloom behind the card, which is what lifts it off the ground
+     4  gold bloom top-right, the only warm light in the frame
+     5  the base gradient
+
+   Only ever seen while signed out: #gate is display:none once the app opens. */
+.gate{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:40px 22px;
+  background-color:#0D0622;
+  background-image:var(--rings-light),var(--dots-light),
+    radial-gradient(820px 640px at 6% 98%,rgba(94,52,214,.44),transparent 68%),
+    radial-gradient(700px 520px at 96% 1%,rgba(232,202,4,.14),transparent 64%),
+    linear-gradient(165deg,#170C3E 0%,#120830 48%,#0A0420 100%);
+  background-position:center 44%,left -50px bottom 30px,center,center,center;
+  background-size:900px 900px,440px 440px,auto,auto,auto;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat}
+/* The brand's purple background mode, and the only screen that gets it: nobody
+   works here, they pass through once, so it may look like the poster on the
+   wall. Concentric rings from the key visual sit behind it, barely there.
+   Everything inside inverts explicitly rather than by inheritance, because
+   inputs take colour:inherit and would set white text on their own white
+   ground. */
+.gate .card{position:relative;overflow:hidden;width:100%;max-width:520px;color:#fff;border-radius:24px;padding:38px 34px;
+  background-color:var(--stamp);
+  box-shadow:0 34px 90px -34px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.14);
+  background-image:var(--spark-white),var(--spark-white),var(--dots-light),var(--rings-light),
+    linear-gradient(158deg,#5B35CD 0%,#4725BA 52%,#4022AF 100%);
+  background-position:right -30px top -34px, left 26px bottom 30px, right -40px top 40px, right -150px top -170px, center;
+  background-size:150px 150px, 34px 34px, 220px 220px, 420px 420px, auto;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat}
+.gate .card .eyebrow{color:rgba(255,255,255,.72)}
+.gate .card h2{color:#fff}
+.gate h2{font-size:29px;line-height:.92;margin-bottom:10px}
+.gate>.card>p{color:rgba(255,255,255,.84);margin:0 0 24px}
 /* Poster copy on the sign-in card. Both are empty until main.js fills them from
    CAMP, and :empty keeps the margins from collapsing into a gap if it can't.
    Selected through .card>p rather than by class alone: the generic .gate>.card>p
    rule above is more specific than a bare class and would otherwise win on both
    colour and margin. */
-.gate>.card>p.gatetag{font-family:var(--display);font-weight:700;font-style:italic;font-size:16px;color:var(--stamp);margin:6px 0 14px}
-.gate>.card>p.gatemeta{font-family:var(--mono);font-size:11.5px;line-height:1.9;letter-spacing:.05em;color:var(--ink-faint);white-space:pre-line;margin:0 0 22px;padding-top:14px;border-top:1.5px solid var(--rule)}
+.gate>.card>p.gatetag{font-family:var(--display);font-weight:800;font-size:19px;line-height:1;letter-spacing:-.01em;color:var(--gold);margin:8px 0 18px}
+.gate>.card>p.gatemeta{font-size:13.5px;line-height:1.85;color:rgba(255,255,255,.78);white-space:pre-line;margin:0 0 24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.2)}
 .gate>.card>p.gatetag:empty,.gate>.card>p.gatemeta:empty{display:none}
 .field{margin-bottom:16px}
-.field label{display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
-.field input,.field textarea,.field select{width:100%;background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:10px 12px;font-family:var(--body);font-size:16px}
-.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--stamp);box-shadow:0 0 0 3px var(--stamp-tint)}
-.field .hint{font-size:13.5px;color:var(--ink-faint);margin-top:5px;font-style:italic}
+.field label{display:block;font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:7px}
+/* Filled, not outlined. The focus ring is the only frame a field ever gets. */
+.field input,.field textarea,.field select{width:100%;background:var(--panel);border:0;border-radius:12px;padding:12px 14px;font-family:var(--body);font-size:16px;transition:box-shadow .15s ease,background .15s ease}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;background:var(--paper);box-shadow:0 0 0 2.5px var(--stamp)}
+.field .hint{font-size:13.5px;color:var(--ink-faint);margin-top:6px}
+.gate .card .field label{color:rgba(255,255,255,.8)}
+.gate .card .field input,.gate .card .field select{background:rgba(255,255,255,.94);color:var(--ink)}
+.gate .card .field input:focus,.gate .card .field select:focus{background:#fff;box-shadow:0 0 0 2.5px var(--gold)}
+.gate .card .field .hint{color:rgba(255,255,255,.76)}
 /* Password reveal. The button sits inside the input's box rather than beside
    it, so the field keeps its full width and the label still points at the
    input. Padding on the input reserves the room the button occupies. */
 .pwwrap{position:relative}
-.pwwrap input{padding-right:46px}
-.pwtoggle{position:absolute;top:50%;right:5px;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;padding:0;background:none;border:0;border-radius:4px;cursor:pointer;color:var(--ink-faint)}
+.pwwrap input{padding-right:48px}
+.pwtoggle{position:absolute;top:50%;right:6px;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;padding:0;background:none;border:0;border-radius:50%;cursor:pointer;color:var(--ink-faint)}
 .pwtoggle:hover{color:var(--stamp);background:var(--panel-2)}
 .pwtoggle svg{width:19px;height:19px;display:block}
 .pwtoggle .eye-shut{display:none}
 .pwtoggle[aria-pressed="true"]{color:var(--stamp)}
 .pwtoggle[aria-pressed="true"] .eye-open{display:none}
 .pwtoggle[aria-pressed="true"] .eye-shut{display:block}
-.authmsg{background:var(--flag-tint);color:var(--flag);border-radius:4px;padding:10px 13px;font-size:14.5px;margin:0 0 16px}
-.authmsg.good{background:var(--stamp-tint);color:var(--stamp)}
-/* Project is misconfigured — aimed at whoever is running the room, not the
+.authmsg{background:var(--flag-tint);color:var(--flag);border-radius:12px;padding:11px 14px;font-size:14.5px;margin:0 0 16px}
+.authmsg.good{background:var(--stamp-tint);color:var(--stamp-deep)}
+/* Project is misconfigured - aimed at whoever is running the room, not the
    participant, so it sits above the form and outlives any attempt message. */
-.gatewarn{border-left:3px solid var(--flag);background:var(--flag-tint);color:var(--flag);border-radius:0 4px 4px 0;padding:11px 14px;font-size:14.5px;margin:0 0 20px}
+.gatewarn{background:var(--flag-tint);color:var(--flag);border-radius:12px;border-left:4px solid var(--flag);padding:12px 15px;font-size:14.5px;margin:0 0 20px}
 .gatewarn strong{font-weight:600}
-.gatewarn code{font-family:var(--mono);font-size:12.5px;background:var(--paper);padding:2px 5px;border-radius:3px}
-.swap{margin:16px 0 0;text-align:center;font-size:14.5px;color:var(--ink-soft)}
+.gatewarn code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.7);padding:2px 5px;border-radius:5px}
+.swap{margin:18px 0 0;text-align:center;font-size:14.5px;color:var(--ink-soft)}
+.gate .card .swap{color:rgba(255,255,255,.76)}
 .linkbtn{background:none;border:0;padding:0;cursor:pointer;color:var(--stamp);font-weight:600;text-decoration:underline;font-family:var(--body);font-size:14.5px}
+.gate .card .linkbtn{color:var(--gold)}
+.gate .card :focus-visible{outline-color:var(--gold)}
 
 /* ---------- buttons ---------- */
-.btn{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:4px;padding:11px 18px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);transition:transform .08s ease, background .15s ease}
-.btn:hover{background:var(--panel-2)}
+/* Pills, filled, borderless. Primary is the purple; everything else recedes. */
+.btn{font-family:var(--display);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:999px;padding:12px 20px;border:0;background:var(--panel-2);color:var(--ink);transition:transform .08s ease,background .16s ease,box-shadow .16s ease}
+.btn:hover{background:#DFD5F4}
 .btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--stamp);border-color:var(--stamp);color:#fff}
-.btn-primary:hover{background:#124a3e}
-.btn-ghost{border-color:var(--rule);color:var(--ink-soft)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-sm{padding:7px 12px;font-size:10.5px}
+.btn-primary{background:var(--stamp);color:#fff;box-shadow:0 6px 18px -8px rgba(71,37,186,.7)}
+.btn-primary:hover{background:var(--stamp-deep)}
+.btn-ghost{background:transparent;color:var(--ink-soft)}
+.btn-ghost:hover{background:var(--panel);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn-sm{padding:8px 14px;font-size:10px}
+.gate .card .btn-primary{background:var(--gold);color:var(--ink);box-shadow:0 8px 22px -10px rgba(0,0,0,.5)}
+.gate .card .btn-primary:hover{background:#F4DA2A}
 :focus-visible{outline:2.5px solid var(--stamp);outline-offset:2px}
 
 /* ---------- layout ---------- */
-.cols{display:grid;grid-template-columns:264px 1fr;gap:34px;padding-top:28px;align-items:start}
-.sidebar{position:sticky;top:88px}
-.mod{margin-bottom:22px}
-.mod>.eyebrow{display:block;padding-bottom:7px;border-bottom:1.5px solid var(--ink);margin-bottom:8px}
-.snav{display:flex;width:100%;gap:10px;align-items:flex-start;text-align:left;background:none;border:0;cursor:pointer;padding:8px 9px;border-radius:4px;font-family:var(--body);font-size:15px;line-height:1.35;color:var(--ink-soft)}
+.cols{display:grid;grid-template-columns:268px 1fr;gap:38px;padding-top:30px;align-items:start}
+.sidebar{position:sticky;top:92px}
+.mod{margin-bottom:26px}
+.mod>.eyebrow{display:flex;align-items:center;gap:7px;color:var(--stamp);margin-bottom:10px;padding-left:9px}
+.mod>.eyebrow::before{content:"";flex:none;width:9px;height:9px;background:var(--gold);-webkit-mask:var(--spark) center/contain no-repeat;mask:var(--spark) center/contain no-repeat}
+/* Rows are pills too. The active one fills purple rather than growing a bar. */
+.snav{display:flex;width:100%;gap:11px;align-items:flex-start;text-align:left;background:none;border:0;cursor:pointer;padding:9px 12px;border-radius:12px;font-family:var(--body);font-size:14.5px;line-height:1.4;color:var(--ink-soft);transition:background .14s ease,color .14s ease}
 .snav:hover{background:var(--panel)}
-.snav[aria-current="true"]{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--ink)}
-.snav .dot{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--rule);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-faint);margin-top:1px}
-.snav.done .dot{background:var(--stamp);border-color:var(--stamp);color:#fff}
+.snav[aria-current="true"]{background:var(--stamp);color:#fff;font-weight:500}
+.snav .dot{flex:none;width:22px;height:22px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--ink-faint);margin-top:1px}
+.snav[aria-current="true"] .dot{background:rgba(255,255,255,.22);color:#fff}
+.snav.done .dot{background:var(--stamp);color:#fff}
+.snav[aria-current="true"].done .dot{background:var(--gold);color:var(--ink)}
 .snav.done{color:var(--ink-faint)}
-.snav.opt .dot{border-style:dashed}
+.snav[aria-current="true"].done{color:#fff}
+.snav.opt .dot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule)}
 /* Shut, not hidden: reading ahead is encouraged, submitting ahead is not. */
-.snav.shut{opacity:.56}
-.snav.shut .dot{border-style:dotted}
+.snav.shut{opacity:.5}
 
 /* step panel */
-.step-head{border-bottom:1.5px solid var(--ink);padding-bottom:18px;margin-bottom:24px}
-.step-head .meta{display:flex;gap:14px;align-items:center;margin-bottom:9px;flex-wrap:wrap}
-.step-head h2{font-size:31px;line-height:1.12;max-width:22ch}
-.pill{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:3px;background:var(--panel-2);color:var(--ink-soft)}
+.step-head{padding-bottom:20px;margin-bottom:26px;border-bottom:1px solid var(--rule)}
+.step-head .meta{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.step-head h2{font-size:36px;line-height:.92;max-width:22ch;color:var(--stamp)}
+/* The short purple-to-gold bar is what a heading gets instead of a full rule. */
+.step-head h2::after{content:"";display:block;width:58px;height:4px;border-radius:999px;background:var(--grad);margin-top:18px}
+.pill{font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:5px 11px;border-radius:999px;background:var(--panel-2);color:var(--ink-soft)}
 .pill.on-stamp{background:var(--stamp-tint);color:var(--stamp)}
-.pill.on-dash{background:transparent;border:1.5px dashed var(--rule)}
+.pill.on-dash{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule)}
 .pill.on-flag{background:var(--flag-tint);color:var(--flag)}
-.prose{max-width:66ch;font-size:17.5px}
+.prose{max-width:66ch;font-size:16.5px}
 .prose p{margin:0 0 15px}
 .prose ul,.prose ol{margin:0 0 15px;padding-left:22px}
 .prose li{margin-bottom:6px}
 .prose strong{font-weight:600}
-.prose code{font-family:var(--mono);font-size:.85em;background:var(--panel-2);padding:1.5px 5px;border-radius:3px}
-.codeblock{position:relative;margin:0 0 18px}
-.codeblock pre{margin:0;background:var(--ink);color:#DCE5DE;border-radius:5px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65}
-.codeblock .copy{position:absolute;top:9px;right:9px;background:rgba(237,239,232,.14);color:#DCE5DE;border:1px solid rgba(237,239,232,.3);border-radius:3px;padding:4px 9px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;cursor:pointer}
-.codeblock .copy:hover{background:rgba(237,239,232,.28)}
-.callout{border-left:3px solid var(--stamp);background:var(--stamp-tint);padding:13px 16px;border-radius:0 4px 4px 0;margin:0 0 18px;font-size:16px}
+.prose code{font-family:var(--mono);font-size:.84em;background:var(--panel-2);padding:2px 6px;border-radius:6px}
+/* Commands wear the gradient on their top edge - the one place it marks
+   "this is the machine talking" rather than "this is progress". */
+.codeblock{position:relative;margin:0 0 18px;border-radius:12px;overflow:hidden}
+.codeblock::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad);z-index:1}
+.codeblock pre{margin:0;background:var(--ink);color:#EBE4FA;padding:20px 18px 17px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.65}
+.codeblock .copy{position:absolute;top:12px;right:10px;background:rgba(255,255,255,.13);color:#EBE4FA;border:0;border-radius:999px;padding:5px 11px;font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;z-index:2}
+.codeblock .copy:hover{background:rgba(255,255,255,.28)}
+.callout{background:var(--stamp-tint);border-radius:14px;padding:15px 18px;margin:0 0 18px;font-size:15.5px}
 /* Named ways of doing the same step. The name is the wording the proof
    dropdown uses, verbatim, so nobody has to guess which one they just ran. */
-.opthead{font-family:var(--display);font-size:16px;font-weight:700;margin:26px 0 4px;padding-top:14px;border-top:1.5px solid var(--rule)}
-.opthead .tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-right:8px}
-.opthead+p{margin-top:6px}
+.opthead{font-family:var(--display);font-size:16px;font-weight:800;margin:30px 0 4px;padding-top:16px;border-top:1px solid var(--rule);display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.opthead .tag{font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--stamp);background:var(--stamp-tint);border-radius:999px;padding:4px 10px}
+.opthead+p{margin-top:8px}
 /* Which machine a command is for. Sits on the block, not inside it as a
-   trailing comment — comments pushed these lines past the pane and left every
+   trailing comment - comments pushed these lines past the pane and left every
    participant a horizontal scrollbar to discover the half that matters. */
-.cmdlabel{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.cmdlabel .note{font-family:var(--body);font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-faint);font-style:italic}
+.cmdlabel{font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 7px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.cmdlabel .note{font-family:var(--body);font-size:14px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink-faint)}
 
 /* Two kinds of content live in a step body, and telling them apart at a glance
    is the difference between following along and re-reading the paragraph three
    times looking for the command. The convention, usable in any step:
 
-     <ol class="acts"><li> …  something you DO, numbered, in order
-     <div class="lesson"> …   something you READ — why it works, what it means
-     <div class="callout"> …  an aside or a gotcha (already in use)
-     <details class="how"> …  optional help, folded away behind an "i"
+     <ol class="acts"><li> ..  something you DO, numbered, in order
+     <div class="lesson"> ..   something you READ - why it works, what it means
+     <div class="callout"> ..  an aside or a gotcha (already in use)
+     <details class="how"> ..  optional help, folded away behind an "i"
 
    Anything not inside .acts is not a step, so nobody has to guess whether a
    paragraph wanted something from them. */
-.acts{list-style:none;counter-reset:act;margin:0 0 24px;padding:0}
-.acts>li{counter-increment:act;position:relative;padding-left:46px;margin:0 0 22px}
+.acts{list-style:none;counter-reset:act;margin:0 0 26px;padding:0}
+.acts>li{counter-increment:act;position:relative;padding-left:48px;margin:0 0 24px}
 .acts>li:last-child{margin-bottom:0}
-.acts>li::before{content:counter(act);position:absolute;left:0;top:0;width:29px;height:29px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;font-weight:700}
+.acts>li::before{content:counter(act);position:absolute;left:0;top:-1px;width:31px;height:31px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:12.5px;font-weight:700}
 /* A spine down the numbers, so a step that runs long still reads as one list. */
-.acts>li:not(:last-child)::after{content:"";position:absolute;left:14px;top:35px;bottom:-22px;width:1.5px;background:var(--rule)}
+.acts>li:not(:last-child)::after{content:"";position:absolute;left:15px;top:38px;bottom:-24px;width:2px;border-radius:999px;background:var(--rule)}
 .acts>li>:first-child{margin-top:0}
 .acts>li>:last-child{margin-bottom:0}
-.acts>li>p:first-child{min-height:29px;margin:0 0 10px}
+.acts>li>p:first-child{min-height:31px;margin:0 0 10px}
 .acts .lesson,.acts .callout{margin-top:14px}
 
-.lesson{border-left:3px solid var(--rule);padding:1px 0 1px 16px;margin:0 0 20px}
-.lesson>.tag{display:block;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
-.lesson p{color:var(--ink-soft);font-size:16px;margin:0 0 10px}
+.lesson{border-left:2px solid var(--rule);padding:1px 0 1px 18px;margin:0 0 20px}
+.lesson>.tag{display:block;font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.lesson p{color:var(--ink-soft);font-size:15.5px;margin:0 0 10px}
 .lesson p:last-child{margin-bottom:0}
 
-/* <details class="how"><summary><i>i</i>Label</summary><div class="body"> … </div></details>
-   Optional help, folded away. Anyone who has installed Git before never opens
-   it; anyone who hasn't gets the whole click path without the step reading as
+/* Optional help, folded away. Anyone who has installed Git before never opens
+   it; anyone who has not gets the whole click path without the step reading as
    twice the work. Native <details>, so it needs no JavaScript and keeps its
-   keyboard behaviour. */
-.how{margin:0 0 16px;border:1.5px solid var(--rule);border-radius:4px;background:var(--panel-2)}
-.how>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:9px 13px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+   keyboard behaviour. Markup:
+   <details class="how"><summary><i>i</i>Label</summary><div class="body">..</div></details> */
+.how{margin:0 0 16px;border-radius:14px;background:var(--panel);overflow:hidden}
+.how>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 15px;font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft)}
 .how>summary::-webkit-details-marker{display:none}
-.how>summary::after{content:"Show";margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--ink-faint)}
+.how>summary::after{content:"Show";margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.1em;color:var(--ink-faint)}
 .how>summary:hover,.how>summary:focus-visible{color:var(--stamp)}
-.how>summary>i{flex:none;width:17px;height:17px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-family:var(--display);font-size:11px;font-style:normal;font-weight:700;line-height:1}
-.how[open]>summary{border-bottom:1.5px solid var(--rule)}
+.how>summary>i{flex:none;width:18px;height:18px;border-radius:50%;background:var(--stamp);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:11px;font-style:normal;font-weight:800;line-height:1}
 .how[open]>summary::after{content:"Hide"}
-.how>.body{padding:14px 15px 2px}
-.how>.body>p,.how>.body li{font-size:15.5px;color:var(--ink-soft)}
+.how>.body{padding:2px 15px 4px}
+.how>.body>p,.how>.body li{font-size:15px;color:var(--ink-soft)}
 .how>.body>p{margin:0 0 12px}
 .how>.body ol,.how>.body ul{margin:0 0 12px;padding-left:20px}
 .how>.body .codeblock{margin-bottom:12px}
@@ -197,206 +319,308 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
 
 /* Every step closes with the same quiet reminder that the room has people in
    it, not only a form. Small, faint, never in the way. */
-.ask{font-size:13.5px;font-style:italic;color:var(--ink-faint);margin:14px 0 0}
-
+.ask{font-size:13.5px;color:var(--ink-faint);margin:16px 0 0}
 
 /* proof section */
-.proof{margin-top:38px;background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:26px 26px 22px;box-shadow:var(--shadow)}
-.proof>header{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
-.proof>header h3{font-size:17px}
-.proof .lede{color:var(--ink-soft);font-size:15.5px;margin:0 0 22px}
-.drop{border:2px dashed var(--rule);border-radius:5px;background:var(--paper);padding:26px 18px;text-align:center;cursor:pointer;transition:.15s}
+.proof{margin-top:42px;background:var(--panel);border-radius:20px;padding:28px 28px 24px;box-shadow:var(--lift)}
+.proof>header{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+.proof>header h3{font-size:18px}
+.proof .lede{color:var(--ink-soft);font-size:15px;margin:0 0 22px}
+.proof .field input,.proof .field textarea,.proof .field select{background:var(--paper)}
+.drop{border:2px dashed var(--rule);border-radius:16px;background:var(--paper);padding:28px 18px;text-align:center;cursor:pointer;transition:.15s}
 .drop:hover,.drop.over{border-color:var(--stamp);background:var(--stamp-tint)}
-.kbd{font-family:var(--mono);font-size:11px;font-weight:700;border:1.5px solid var(--rule);border-bottom-width:3px;border-radius:4px;padding:2px 6px;background:var(--panel-2)}
+.kbd{font-family:var(--mono);font-size:11px;font-weight:700;border-radius:6px;padding:3px 7px;background:var(--panel-2);box-shadow:0 1.5px 0 var(--rule)}
 .drop p{margin:0;font-size:15px;color:var(--ink-soft)}
-.drop .big{font-family:var(--display);font-weight:700;font-size:15px;color:var(--ink);margin-bottom:5px}
-.shots{display:flex;flex-wrap:wrap;gap:11px;margin-top:14px}
-.shot{position:relative;width:132px;border:1.5px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--paper);cursor:zoom-in}
+.drop .big{font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink);margin-bottom:5px}
+.shots{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.shot{position:relative;width:134px;border-radius:12px;overflow:hidden;background:var(--paper);cursor:zoom-in;box-shadow:var(--lift)}
 .shot img{display:block;width:100%;height:88px;object-fit:cover}
-.shot .cap{font-family:var(--mono);font-size:9px;letter-spacing:.06em;padding:4px 6px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shot .x{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--paper);border:0;cursor:pointer;font-size:12px;line-height:1}
-.req{color:var(--flag);font-family:var(--mono);font-size:10px;letter-spacing:.1em;margin-left:6px}
-.actions{display:flex;gap:11px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:20px;border-top:1.5px solid var(--rule)}
-.missing{font-size:14px;color:var(--flag);font-style:italic;margin-left:auto;text-align:right}
+.shot .cap{font-family:var(--mono);font-size:9px;padding:5px 7px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shot .x{position:absolute;top:5px;right:5px;width:21px;height:21px;border-radius:50%;background:var(--ink);color:#fff;border:0;cursor:pointer;font-size:12px;line-height:1}
+.req{color:var(--flag);font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;margin-left:7px}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:26px;padding-top:22px;border-top:1px solid var(--rule)}
+.missing{font-size:14px;color:var(--flag);margin-left:auto;text-align:right}
 
-/* preview of a step that hasn't opened yet */
+/* preview of a step that has not opened yet */
 .shutwrap{position:relative}
-.prooffields[inert]{filter:blur(1.7px) saturate(.55);opacity:.55;user-select:none}
-.lockpanel{position:absolute;inset:-8px;display:grid;place-items:start center;padding:18px 12px;background:rgba(228,231,222,.5)}
-.lockpanel>div{max-width:46ch;text-align:center;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:20px 22px;box-shadow:var(--shadow)}
-.lockpanel h3{font-size:19px;margin:6px 0 8px}
+.prooffields[inert]{filter:blur(1.7px) saturate(.55);opacity:.5;user-select:none}
+.lockpanel{position:absolute;inset:-8px;display:grid;place-items:start center;padding:20px 12px;background:rgba(246,243,253,.62)}
+.lockpanel>div{max-width:46ch;text-align:center;background:var(--paper);border-radius:18px;padding:22px 24px;box-shadow:var(--lift-2)}
+.lockpanel h3{font-size:19px;margin:8px 0 8px}
 .lockpanel p{margin:0 0 16px;font-size:15px;color:var(--ink-soft)}
 
-/* ---------- THE STAMP ---------- */
-.stamp{display:inline-block;border:2.5px solid var(--stamp);color:var(--stamp);border-radius:6px;padding:8px 14px 7px;transform:rotate(-3.2deg);font-family:var(--mono);text-align:center;background:transparent;box-shadow:inset 0 0 0 1px var(--stamp);opacity:.92}
-.stamp .l1{font-size:15px;font-weight:700;letter-spacing:.22em;display:block;line-height:1.1}
-.stamp .l2{font-size:9px;letter-spacing:.13em;display:block;margin-top:3px;padding-top:3px;border-top:1px solid currentColor;opacity:.85}
+/* ---------- THE STAMP ----------
+   One colour, purple, and nothing else - no gold rule, no second hue. It is a
+   seal, and a seal is pressed in a single ink. The sparkle is the brand's mark
+   set in that same purple, which is why it uses currentColor. */
+.stamp{display:inline-block;border:2px solid var(--stamp);color:var(--stamp);border-radius:14px;padding:9px 15px 8px;transform:rotate(-3.2deg);font-family:var(--display);text-align:center;background:transparent;opacity:.95}
+.stamp .l1{font-size:14px;font-weight:800;letter-spacing:.18em;display:block;line-height:1.1}
+.stamp .l1::before{content:"";display:inline-block;width:9px;height:9px;margin-right:7px;background:currentColor;-webkit-mask:var(--spark) center/contain no-repeat;mask:var(--spark) center/contain no-repeat}
+.stamp .l2{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;display:block;margin-top:4px;padding-top:4px;border-top:1px solid currentColor;opacity:.75}
 .stamp.press{animation:press .42s cubic-bezier(.2,1.4,.4,1)}
-@keyframes press{0%{transform:rotate(-14deg) scale(2.1);opacity:0}55%{transform:rotate(-3.2deg) scale(.94);opacity:1}100%{transform:rotate(-3.2deg) scale(1);opacity:.92}}
+@keyframes press{0%{transform:rotate(-14deg) scale(2.1);opacity:0}55%{transform:rotate(-3.2deg) scale(.94);opacity:1}100%{transform:rotate(-3.2deg) scale(1);opacity:.95}}
 @media (prefers-reduced-motion:reduce){.stamp.press{animation:none}*{transition-duration:.01ms !important}}
 
-.section-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-top:34px;padding-bottom:14px;border-bottom:1.5px solid var(--ink)}
-.section-head h2{font-size:25px}
+.section-head{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-top:38px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.section-head h2{font-size:30px;line-height:.92;color:var(--stamp)}
+.section-head h2::after{content:"";display:block;width:58px;height:4px;border-radius:999px;background:var(--grad);margin-top:16px}
 .section-head p{margin:0;color:var(--ink-soft);font-size:15px;max-width:52ch}
 .section-head .tools{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
 
 /* ---------- unlock / locked ---------- */
-.locked{border:2px dashed var(--rule);border-radius:6px;padding:30px 28px;margin-top:24px;background:var(--panel)}
-.locked h3{font-size:21px;margin-bottom:6px}
-.locked p{margin:0 0 18px;color:var(--ink-soft);max-width:56ch}
+.locked{border:2px dashed var(--rule);border-radius:20px;padding:32px 30px;margin-top:26px;background-color:var(--panel);
+  background-image:var(--dots-ink);background-position:right 18px top 18px;background-repeat:no-repeat}
+.locked h3{font-size:22px;line-height:.94;margin-bottom:8px}
+.locked p{margin:0 0 20px;color:var(--ink-soft);max-width:56ch}
 .togo{display:flex;flex-wrap:wrap;gap:8px}
-.togo button{font-family:var(--mono);font-size:11px;letter-spacing:.06em;background:var(--paper);border:1.5px solid var(--rule);border-radius:4px;padding:7px 11px;cursor:pointer;color:var(--ink-soft);text-align:left}
-.togo button:hover{border-color:var(--ink);color:var(--ink)}
-.unlocked{border:2.5px solid var(--stamp);border-radius:6px;padding:30px 28px;margin-top:24px;background:var(--stamp-tint);display:flex;gap:26px;align-items:center;flex-wrap:wrap}
-.unlocked h3{font-size:23px;margin-bottom:6px}
+.togo button{font-family:var(--body);font-size:14px;background:var(--paper);border:0;border-radius:999px;padding:8px 15px;cursor:pointer;color:var(--ink-soft);text-align:left;transition:.14s}
+.togo button:hover{background:var(--stamp);color:#fff}
+/* Finishing is the day's key moment, so it takes the accent outright: gold
+   ground, gold sparkle, rings from the key visual behind it. */
+.unlocked{position:relative;overflow:hidden;border-radius:22px;padding:34px 30px;margin-top:26px;background-color:var(--gold-tint);display:flex;gap:26px;align-items:center;flex-wrap:wrap;box-shadow:var(--lift);
+  background-image:var(--spark-gold),var(--dots-ink),var(--rings-ink);
+  background-position:left 22px bottom 24px, left -30px top 30px, right -140px bottom -170px;
+  background-size:30px 30px, 220px 220px, 400px 400px;
+  background-repeat:no-repeat}
+.unlocked::before{content:"";position:absolute;top:-46px;right:-30px;width:190px;height:190px;background:var(--gold);opacity:.34;-webkit-mask:var(--spark) center/contain no-repeat;mask:var(--spark) center/contain no-repeat;pointer-events:none}
+.unlocked>*{position:relative}
+.unlocked h3{font-size:26px;line-height:.92;color:var(--stamp);margin-bottom:8px}
 .unlocked p{margin:0;color:var(--ink-soft);max-width:44ch}
 .unlocked .grow{flex:1;min-width:260px}
 .unlocked .btns{display:flex;gap:10px;flex-wrap:wrap}
 
 /* review sheet */
-.record{background:var(--panel);border:1.5px solid var(--ink);border-radius:6px;padding:30px;margin-top:24px}
-.sendrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 4px;padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.record{background:var(--panel);border-radius:20px;padding:30px;margin-top:26px}
+.sendrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:16px 0 4px;padding-bottom:18px;border-bottom:1px solid var(--rule)}
 .sendrow span{font-size:13.5px;color:var(--ink-soft)}
-.rrow{display:grid;grid-template-columns:56px 1fr 168px;gap:18px;padding:20px 0;border-bottom:1px solid var(--rule);align-items:start}
+.rrow{display:grid;grid-template-columns:56px 1fr 168px;gap:18px;padding:22px 0;border-bottom:1px solid var(--rule);align-items:start}
 .rrow:last-child{border-bottom:0}
-.rrow .num{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ink-faint)}
-.rrow h4{font-family:var(--display);font-size:16.5px;margin:0 0 8px}
+.rrow .num{font-family:var(--mono);font-size:21px;font-weight:700;color:var(--ink-faint)}
+.rrow h4{font-family:var(--display);font-weight:800;font-size:16.5px;margin:0 0 9px}
 .answers{margin:0;font-size:15px}
-.answers dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:9px}
-.answers dd{margin:2px 0 0;white-space:pre-wrap}
-.rshots{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
-.rshots img{width:88px;height:58px;object-fit:cover;border:1.5px solid var(--rule);border-radius:3px;cursor:zoom-in}
+.answers dt{font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-faint);margin-top:10px}
+.answers dd{margin:3px 0 0;white-space:pre-wrap}
+.rshots{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rshots img{width:88px;height:58px;object-fit:cover;border-radius:8px;cursor:zoom-in}
 .rstamp{text-align:right}
-.nowt{color:var(--ink-faint);font-style:italic;margin:0}
+.nowt{color:var(--ink-faint);margin:0}
 
 /* mentor key + facilitator room */
-.key{border:1.5px dashed var(--ink);border-radius:5px;padding:15px 17px;margin-top:22px;background:var(--panel-2)}
-.key .eyebrow{display:block;margin-bottom:6px}
-.key p{margin:0;font-size:15.5px}
-/* Flex, not grid: when six tiles wrap to a second row the leftovers stretch to
-   fill it, instead of leaving a bare strip of the gap colour showing. */
-.stats{display:flex;flex-wrap:wrap;gap:2px;background:var(--rule);border:1.5px solid var(--ink);border-radius:6px;overflow:hidden;margin-top:24px}
-.stats div{background:var(--panel);padding:16px 18px;flex:1 1 150px}
-.stats dt{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
-.stats dd{margin:4px 0 0;font-family:var(--display);font-size:26px;font-weight:700}
-.livepill{display:inline-flex;align-items:center;gap:6px;margin-top:18px;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:3px;background:var(--panel-2);color:var(--ink-faint)}
+.key{border-radius:14px;padding:16px 18px;margin-top:24px;background:var(--stamp-tint)}
+.key .eyebrow{display:block;margin-bottom:7px;color:var(--stamp)}
+.key p{margin:0;font-size:15px}
+/* Separate tiles with air between them, rather than cells sharing a rule. */
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.stats div{background:var(--panel);border-radius:16px;padding:17px 19px;flex:1 1 150px}
+.stats dt{font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.stats dd{margin:6px 0 0;font-family:var(--display);font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.stats dd.sm{font-size:15px;line-height:1.35;letter-spacing:0}
+.stats dd.bad{color:var(--flag)}
+.livepill{display:inline-flex;align-items:center;gap:7px;margin-top:20px;font-family:var(--display);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:6px 12px;border-radius:999px;background:var(--panel);color:var(--ink-faint)}
 .livepill i{width:6px;height:6px;border-radius:50%;background:currentColor}
 .livepill.on{background:var(--stamp-tint);color:var(--stamp)}
 .livepill.on i{animation:blip 2s ease-in-out infinite}
 .livepill.wait i{opacity:.5}
 @keyframes blip{0%,100%{opacity:1}50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.livepill.on i{animation:none}}
-.stats dd.sm{font-size:15px;line-height:1.35}
-.stats dd.bad{color:var(--flag)}
 
 /* answers that mean "walk over there" */
-.alerts{display:grid;gap:10px;margin-top:20px}
+.alerts{display:grid;gap:11px;margin-top:22px}
 .alerts.tight{margin:16px 0 0}
-.alert{border:1.5px solid var(--warn);border-left-width:5px;border-radius:5px;background:var(--warn-tint);padding:13px 16px}
-.alert.bad{border-color:var(--flag);background:var(--flag-tint)}
+.alert{border-left:4px solid var(--warn);border-radius:14px;background:var(--warn-tint);padding:14px 17px}
+.alert.bad{border-left-color:var(--flag);background:var(--flag-tint)}
 .alert>.eyebrow{display:block;color:var(--warn)}
 .alert.bad>.eyebrow{color:var(--flag)}
-.alert strong{display:block;font-family:var(--display);font-size:16px;margin:4px 0 3px}
+.alert strong{display:block;font-family:var(--display);font-weight:800;font-size:16px;margin:5px 0 4px}
 .alert p{margin:0;font-size:15px;color:var(--ink-soft);max-width:60ch}
-.alert .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
-.chip{font-family:var(--mono);font-size:11px;font-weight:700;background:var(--paper);border:1.5px solid var(--ink);border-radius:3px;padding:6px 10px;cursor:pointer;color:var(--ink)}
-.chip:hover{background:var(--ink);color:var(--paper)}
+.alert .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{font-family:var(--display);font-size:11px;font-weight:800;background:rgba(255,255,255,.75);border:0;border-radius:999px;padding:7px 13px;cursor:pointer;color:var(--ink);transition:.14s}
+.chip:hover{background:var(--ink);color:#fff}
 
-/* stamped-per-step, so the wall is visible from the front of the room */
-.wall{margin-top:24px;border:1.5px solid var(--ink);border-radius:6px;background:var(--panel);padding:18px 20px}
-.wall>.eyebrow{display:block;margin-bottom:12px}
-.wrow{display:flex;align-items:center;gap:11px;padding:4px 0}
-.wrow .wn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink-faint);width:22px;flex:none}
-.wrow .wt{font-size:14.5px;flex:0 1 250px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wrow .wtag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flag);border:1.5px solid var(--flag);border-radius:3px;padding:2px 6px;flex:none}
-.wrow .wbar{flex:1 1 auto;min-width:56px;height:9px;background:var(--panel-2);border-radius:2px;overflow:hidden}
-.wrow .wbar i{display:block;height:100%;background:var(--stamp)}
-.wrow .wc{font-family:var(--mono);font-size:11px;color:var(--ink-soft);width:54px;text-align:right;flex:none}
-.wrow.drop{border-top:1.5px dashed var(--flag);margin-top:4px;padding-top:8px}
-.wrow.drop .wbar i{background:var(--flag)}
+/* ---------- the desk's two tables ----------
+   Both of these are tabular data and are now marked up as tables, with real
+   column headers, a header row, row-scoped <th> for the name and the step, and
+   aria-sort on whichever column is driving the order. The roster's sort moved
+   onto its column headers, which is where a table puts it, so the separate
+   segmented control is gone.
 
-/* roster */
-.rosterhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+   They were previously divs and spans imitating columns, which meant no header
+   row at all - seven unlabelled values per line - and column positions that
+   drifted with content width. Table layout aligns columns for free; the
+   `table-layout:fixed` below is what additionally lets a long step title
+   ellipsize instead of pushing the row wider.
+
+   The wrapper div is not decoration: a table cannot reliably clip its own
+   rounded corners, and it gives the narrow-screen rules something to scroll. */
+.tablewrap{background:var(--paper);border-radius:16px;box-shadow:var(--lift);overflow:hidden;margin-top:12px}
+.roster,.wall{width:100%;border-collapse:collapse;table-layout:fixed;font-size:15px}
+
+.roster caption,.wall caption{caption-side:top;text-align:left;padding:16px 18px 0}
+.wall caption{font-family:var(--display);font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--stamp)}
+.roster caption{font-size:13.5px;color:var(--ink-faint)}
+
+/* The rule under the header row is the heaviest line in either table. It is
+   what makes the thing read as a table rather than as a list of rows. */
+.roster thead th,.wall thead th{font-family:var(--display);font-size:9.5px;font-weight:800;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--ink-faint);text-align:left;vertical-align:bottom;
+  padding:14px 12px 9px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+.roster tbody th,.roster tbody td,.wall tbody th,.wall tbody td{padding:12px;border-bottom:1px solid var(--rule);vertical-align:middle;text-align:left;font-weight:400}
+.roster tbody tr:last-child>*,.wall tbody tr:last-child>*{border-bottom:0}
+.roster thead th:first-child,.roster tbody tr>:first-child,
+.wall thead th:first-child,.wall tbody tr>:first-child{padding-left:18px}
+.roster thead th:last-child,.roster tbody tr>:last-child,
+.wall thead th:last-child,.wall tbody tr>:last-child{padding-right:18px}
+
+/* Sort is a pill group above the table rather than clickable headers. The
+   header cells stay plain, but the live column still carries aria-sort — and
+   picks up the purple, which is what ties the chosen pill to the column it is
+   actually ordering. */
+.rosterhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:30px}
 .rosterhead .sp{margin-left:auto}
-.segs{display:flex;gap:2px;background:var(--panel-2);padding:3px;border-radius:4px}
-.seg{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:none;border:0;border-radius:3px;padding:6px 9px;cursor:pointer;color:var(--ink-soft)}
-.seg[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
-.roster{margin:10px 0 0;border-top:1.5px solid var(--ink)}
-.deskfoot{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin:12px 0 0}
-.rline{display:flex;width:100%;gap:12px;align-items:center;padding:11px 6px 11px 0;border:0;border-bottom:1px solid var(--rule);background:none;color:inherit;font-family:var(--body);font-size:15px;text-align:left;cursor:pointer}
+.segs{display:flex;gap:3px;background:var(--panel);padding:4px;border-radius:999px}
+.seg{font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  background:none;border:0;border-radius:999px;padding:8px 14px;cursor:pointer;color:var(--ink-soft);
+  transition:background .16s ease,color .16s ease}
+.seg:hover{color:var(--ink)}
+.seg[aria-pressed="true"]{background:var(--stamp);color:#fff}
+.roster thead th[aria-sort]{color:var(--stamp)}
+
+/* roster columns */
+.roster .c-name{width:23%}
+.roster .c-os{width:76px}
+.roster .c-bar{width:132px}
+.roster .c-num{width:66px;text-align:right}
+.roster .c-next{width:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.roster .c-flags{width:96px}
+.roster .c-quiet{width:112px;text-align:right}
+.roster thead .c-num,.roster thead .c-quiet{text-align:right}
+
+.rline{cursor:pointer;transition:background .14s ease}
 .rline:hover{background:var(--panel)}
-.rline:focus-visible{outline:2px solid var(--stamp);outline-offset:-2px}
-.rline.hot{box-shadow:inset 3px 0 0 var(--flag)}
-.rline .nm{font-family:var(--display);font-weight:700;font-size:15px;min-width:150px}
-.rline .mt{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase}
-.rline .nx{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);flex:0 1 230px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rline .sp{margin-left:auto}
-.rline .idle{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);min-width:92px;text-align:right;flex:none}
-.rline .idle.warn{color:var(--warn);font-weight:700}
-.rline .idle.bad{color:var(--flag);font-weight:700}
-.rflags{display:flex;gap:5px;flex:none}
-.rflags:empty{display:none}
-.rflag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 6px;border-radius:3px;background:var(--warn-tint);color:var(--warn);white-space:nowrap}
+.rline:focus-within{background:var(--panel)}
+/* Needs-someone: a spine on the leading cell and the faintest wash on the row.
+   Put on the cell rather than the tr because box-shadow on a collapsed-border
+   table row is not dependably painted. */
+.rline.hot{background:rgba(200,16,46,.045)}
+.rline.hot:hover{background:rgba(200,16,46,.085)}
+.rline.hot>.c-name{box-shadow:inset 3px 0 0 var(--flag)}
+.rowbtn{display:block;width:100%;font-family:var(--display);font-weight:800;font-size:15px;color:inherit;
+  background:none;border:0;padding:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowbtn:hover{color:var(--stamp)}
+.roster tbody .c-os{font-size:13px;color:var(--ink-faint)}
+/* Counts are numbers: mono and tabular, so the column reads down. The total is
+   the same on every row, so it recedes and the count itself carries. */
+.roster tbody .c-num{font-family:var(--mono);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.roster tbody .c-num .of{font-size:11px;font-weight:400;color:var(--ink-faint)}
+.roster tbody .c-next{font-size:14px;color:var(--ink-soft)}
+.roster tbody .c-next .sn{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin-right:8px}
+.roster tbody .c-next .ok{color:var(--stamp);font-weight:600}
+.roster tbody .c-quiet{font-size:12.5px;color:var(--ink-faint)}
+.roster tbody .c-quiet.warn{color:var(--warn);font-weight:500}
+.roster tbody .c-quiet.bad{color:var(--flag);font-weight:600}
+.rflag{display:inline-block;font-family:var(--display);font-size:8.5px;font-weight:800;letter-spacing:.09em;
+  padding:4px 8px;border-radius:999px;background:var(--warn-tint);color:var(--warn);white-space:nowrap}
 .rflag.bad{background:var(--flag-tint);color:var(--flag)}
-.minirail{width:110px;height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;flex:none}
-.minirail i{display:block;height:100%;background:var(--stamp)}
+.rflag+.rflag{margin-left:4px}
+/* Track dark enough to read as an empty bar on white. The fill is omitted
+   entirely at zero, so min-width can rescue 1/19 from rendering as a stray dot
+   without giving a not-started row a purple pip. */
+.minirail{display:block;width:100%;height:7px;background:var(--panel-2);border-radius:999px;overflow:hidden}
+.minirail i{display:block;height:100%;min-width:7px;border-radius:999px;background:var(--stamp)}
+
+/* wall columns */
+.wall .c-n{width:46px}
+.wall .c-bar{width:34%}
+.wall .c-num{width:74px;text-align:right}
+.wall tbody .c-n{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--ink-faint)}
+.wall tbody .c-step{font-size:14.5px;font-weight:400}
+.wall tbody .c-num{font-family:var(--mono);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.wall thead .c-num{text-align:right}
+.wbar{display:block;width:100%;height:8px;background:var(--panel-2);border-radius:999px;overflow:hidden}
+.wbar i{display:block;height:100%;min-width:8px;border-radius:999px;background:var(--stamp)}
+/* The step the room falls off. Marked once, on the row, and named in the cell
+   so it does not rely on colour alone. */
+.wall tbody tr.drop>*{background:var(--flag-tint)}
+.wall tbody tr.drop .wbar i{background:var(--flag)}
+.wtag{display:inline-block;margin-left:10px;font-family:var(--display);font-size:8.5px;font-weight:800;
+  letter-spacing:.09em;text-transform:uppercase;color:#fff;background:var(--flag);border-radius:999px;padding:3px 8px}
 
 /* one participant, opened over the desk */
-.plinks{display:grid;gap:8px;margin:16px 0 4px}
-.plinks a,.plinks .dead{display:block;font-family:var(--mono);font-size:12.5px;word-break:break-all;border:1.5px solid var(--rule);border-radius:4px;padding:9px 12px;background:var(--panel);text-decoration:none;color:var(--stamp)}
-.plinks a:hover{border-color:var(--stamp)}
+.plinks{display:grid;gap:9px;margin:18px 0 4px}
+.plinks a,.plinks .dead{display:block;font-family:var(--mono);font-size:12.5px;word-break:break-all;border-radius:12px;padding:11px 14px;background:var(--panel);text-decoration:none;color:var(--stamp);transition:.14s}
+.plinks a:hover{background:var(--stamp-tint)}
 .plinks .dead{color:var(--ink-faint)}
-.plinks .eyebrow{display:block;margin-bottom:3px}
+.plinks .eyebrow{display:block;margin-bottom:4px}
 
-.empty{border:2px dashed var(--rule);border-radius:6px;padding:44px 24px;text-align:center;color:var(--ink-soft);margin-top:22px}
-.empty .big{font-family:var(--display);font-weight:700;color:var(--ink);font-size:17px;margin-bottom:6px}
+.empty{border:2px dashed var(--rule);border-radius:20px;padding:46px 24px;text-align:center;color:var(--ink-soft);margin-top:24px;
+  background-image:var(--dots-ink);background-position:center;background-repeat:no-repeat}
+.empty .big{font-family:var(--display);font-weight:800;color:var(--ink);font-size:18px;margin-bottom:6px}
 
 /* ---------- share sheet ---------- */
-.sheet{position:fixed;inset:0;background:rgba(23,33,28,.82);z-index:92;display:flex;align-items:flex-start;justify-content:center;padding:34px 18px;overflow-y:auto}
-.sheet-in{position:relative;width:100%;max-width:600px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:28px 28px 22px;box-shadow:0 30px 70px -30px rgba(23,33,28,.8)}
-.sheet-in h3{font-size:22px;margin:6px 0 8px}
-.sheet-x{position:absolute;top:12px;right:12px;width:28px;height:28px;border:1.5px solid var(--rule);border-radius:50%;background:var(--panel);color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1}
-.sheet-x:hover{border-color:var(--ink);color:var(--ink)}
+.sheet{position:fixed;inset:0;background:rgba(28,15,74,.8);backdrop-filter:blur(3px);z-index:92;display:flex;align-items:flex-start;justify-content:center;padding:34px 18px;overflow-y:auto}
+.sheet-in{position:relative;width:100%;max-width:600px;background:var(--paper);border-radius:22px;padding:30px 30px 24px;box-shadow:0 30px 70px -30px rgba(28,15,74,.8)}
+.sheet-in h3{font-size:24px;line-height:.92;margin:6px 0 10px}
+.sheet-x{position:absolute;top:14px;right:14px;width:30px;height:30px;border:0;border-radius:50%;background:var(--panel);color:var(--ink-soft);cursor:pointer;font-size:15px;line-height:1}
+.sheet-x:hover{background:var(--panel-2);color:var(--ink)}
 .sheet-lede{margin:0 0 20px;font-size:15px;color:var(--ink-soft)}
 .sheet-in textarea{font-family:var(--mono);font-size:12.5px;line-height:1.7}
-.sharefile{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border:1.5px solid var(--stamp);border-radius:5px;background:var(--stamp-tint);padding:14px 16px}
+.sharefile{display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-radius:14px;background:var(--stamp-tint);padding:15px 17px}
 .sharefile .grow{flex:1;min-width:210px}
-.sharefile strong{display:block;font-size:12px;word-break:break-all;margin:4px 0 3px}
+.sharefile strong{display:block;font-family:var(--mono);font-size:11.5px;word-break:break-all;margin:4px 0 3px}
 .sharefile small{display:block;font-size:13px;color:var(--ink-soft)}
-.sharefile.bad{border-color:var(--flag);background:var(--flag-tint)}
+.sharefile.bad{background:var(--flag-tint)}
 .sharefile.bad small{color:var(--flag)}
-.eyebrow.shareto{display:block;margin:22px 0 10px}
-.sharegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
-.stile{text-align:left;background:var(--panel);border:1.5px solid var(--rule);border-radius:5px;padding:11px 13px;cursor:pointer;transition:.15s}
-.stile:hover{border-color:var(--ink);background:var(--panel-2)}
-.stile:disabled{opacity:.55;cursor:default}
-.stile strong{display:block;font-family:var(--display);font-size:14.5px}
-.stile small{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
-.sheet-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--rule)}
+.eyebrow.shareto{display:block;margin:24px 0 11px}
+.sharegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stile{text-align:left;background:var(--panel);border:0;border-radius:14px;padding:13px 15px;cursor:pointer;transition:.15s}
+.stile:hover{background:var(--stamp-tint)}
+.stile:disabled{opacity:.5;cursor:default}
+.stile strong{display:block;font-family:var(--display);font-weight:800;font-size:14.5px}
+.stile small{display:block;font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.sheet-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:26px;padding-top:20px;border-top:1px solid var(--rule)}
 .sheet-foot .sp{margin-left:auto}
 
-.lightbox{position:fixed;inset:0;background:rgba(23,33,28,.9);display:grid;place-items:center;z-index:90;padding:28px;cursor:zoom-out}
-.lightbox img{max-width:100%;max-height:100%;border-radius:4px}
-.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:95;background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:5px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;box-shadow:0 8px 30px -10px rgba(0,0,0,.6);max-width:88vw;text-align:center}
-.savepill{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
-.footbar{border-top:1.5px solid var(--rule);margin-top:44px;padding:18px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+/* Overlay stack, in order: masthead 40, .sheet 92, .lightbox 94, .toast 95.
+   The lightbox is opened from inside a sheet but appended to document.body, so
+   it is a sibling of the sheet, not a child — this number is the only thing
+   putting it in front. At 90 it lost to .sheet and opened behind the modal. */
+.lightbox{position:fixed;inset:0;background:rgba(28,15,74,.92);z-index:94;cursor:zoom-out;
+  display:grid;place-items:center;padding:clamp(14px,3vw,34px);
+  /* Both tracks are minmax(0,1fr) rather than auto for one specific reason: the
+     image below caps itself with max-height:100%, and a percentage against an
+     auto-sized track is circular — the track would size to the image while the
+     image sizes to the track — so the browser drops the cap and a tall
+     screenshot runs off the bottom of the screen. A definite track makes the
+     percentage resolvable, which is what actually makes the image fit. */
+  grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr);
+  /* Nothing here ever scrolls: the image is scaled to fit instead. contain
+     stops a wheel over the overlay from scrolling the sheet underneath it. */
+  overflow:hidden;overscroll-behavior:contain}
+/* width/height auto keeps a small screenshot at its natural size rather than
+   stretching it blurry to fill; contain preserves the aspect ratio on the way
+   down for everything larger than the screen. */
+.lightbox img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:10px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:95;background:var(--ink);color:#fff;padding:12px 22px;border-radius:999px;font-family:var(--display);font-size:11.5px;font-weight:700;box-shadow:0 8px 30px -10px rgba(0,0,0,.6);max-width:88vw;text-align:center}
+.savepill{font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+.footbar{border-top:1px solid var(--rule);margin-top:48px;padding:20px 0;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-faint)}
 .footbar .sp{margin-left:auto}
 
-.bootfail{max-width:620px;margin:12vh auto;padding:30px;border:2px solid var(--flag);border-radius:6px;background:var(--flag-tint)}
-.bootfail h2{font-size:22px;margin-bottom:10px}
-.bootfail code{font-family:var(--mono);font-size:13px;background:var(--paper);padding:2px 6px;border-radius:3px}
+.bootfail{max-width:620px;margin:12vh auto;padding:32px;border-radius:20px;border-left:5px solid var(--flag);background:var(--flag-tint)}
+.bootfail h2{font-size:23px;line-height:.94;margin-bottom:12px}
+.bootfail code{font-family:var(--mono);font-size:13px;background:rgba(255,255,255,.75);padding:3px 7px;border-radius:6px}
 
 @media (max-width:900px){
-  .cols{grid-template-columns:1fr;gap:22px}
+  .cols{grid-template-columns:1fr;gap:24px}
   .sidebar{position:static;order:2}
   .rrow{grid-template-columns:1fr;gap:10px}
   .rstamp{text-align:left}
-  .step-head h2{font-size:25px}
+  .step-head h2{font-size:28px}
   .masthead-in{padding:12px 16px;gap:12px}
   .wrap{padding:0 16px 70px}
   .brand{width:100%}
   .sheet{padding:16px 10px}
-  .sheet-in{padding:22px 18px 18px}
+  .sheet-in{padding:24px 20px 20px}
+  .gate .card{padding:30px 24px}
 }
 
 /* ---------- the desk on a phone ----------
@@ -408,41 +632,54 @@ h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:-.015em;margi
   .brand h1{font-size:16px}
   .brand .code{display:none}
   .tabs{order:3;width:100%;justify-content:space-between}
-  .tab{flex:1;text-align:center;padding:8px 4px;font-size:10px;letter-spacing:.06em}
+  .tab{flex:1;text-align:center;padding:9px 4px;font-size:10px;letter-spacing:.04em}
 
-  .section-head{padding-top:24px}
+  .section-head{padding-top:26px}
+  .section-head h2{font-size:25px}
   .section-head .tools{margin-left:0;width:100%}
   .section-head .tools .btn{flex:1}
 
-  .stats{margin-top:18px}
-  .stats div{padding:13px 14px;flex:1 1 120px}
-  .stats dd{font-size:22px}
+  .stats{margin-top:18px;gap:8px}
+  .stats div{padding:14px 15px;flex:1 1 130px}
+  .stats dd{font-size:23px}
   .stats dd.sm{font-size:13.5px}
 
-  .wall{padding:15px 14px}
-  .wrow{flex-wrap:wrap;gap:6px 9px;padding:7px 0;border-bottom:1px solid var(--rule)}
-  .wrow:last-child{border-bottom:0}
-  .wrow .wt{flex:1 1 auto;white-space:normal}
-  .wrow .wc{width:auto}
-  .wrow .wbar{flex:1 1 100%;order:5}
 
-  .rosterhead{margin-top:22px}
+  /* One card per person, not a seven-column horizontal scroll. The header row
+     is dropped and each cell announces its own column from data-label, which is
+     why every roster <td> carries one. The name keeps its own line; everything
+     else becomes a label/value pair. */
+  .tablewrap{border-radius:14px}
+  .rosterhead{margin-top:24px;gap:8px}
   .rosterhead .sp{display:none}
   .segs{width:100%}
-  .seg{flex:1}
+  .seg{flex:1;padding:8px 4px;letter-spacing:.04em}
+  .roster{display:block;table-layout:auto}
+  .roster caption{padding:14px 15px 0}
+  .roster thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .roster tbody,.roster tr{display:block}
+  .roster tbody tr{padding:14px 15px;border-bottom:1px solid var(--rule)}
+  .roster tbody tr:last-child{border-bottom:0}
+  .roster tbody th,.roster tbody td{display:flex;align-items:center;gap:12px;padding:3px 0;border-bottom:0;width:auto}
+  .roster tbody td::before{content:attr(data-label);flex:none;width:82px;font-family:var(--display);font-size:9px;
+    font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint)}
+  .roster tbody td.c-next,.roster tbody td.c-quiet,.roster tbody td.c-num{text-align:left}
+  .roster .c-name{margin-bottom:6px}
+  .roster .rowbtn{font-size:16.5px}
+  .roster .c-bar .minirail{flex:1}
+  .roster tbody td.c-flags:empty{display:none}
+  /* Both of these say nothing on a finished row, and an empty label/value pair
+     reads as missing data rather than as nothing to report. */
+  .roster tbody td.c-quiet:empty{display:none}
+  .rline.hot{background:none}
+  .rline.hot>.c-name{box-shadow:none}
+  .roster tbody tr.hot{box-shadow:inset 3px 0 0 var(--flag);background:rgba(200,16,46,.045)}
 
-  /* Wraps into: name · steps / progress bar / next step / flags · quiet.
-     Ordered rather than laid out on a grid so a row with no flags on it, or
-     two, keeps the same shape. */
-  .rline{flex-wrap:wrap;row-gap:7px;align-items:center;padding:14px 6px 14px 9px}
-  .rline .nm{order:1;flex:1 1 auto;min-width:0;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rline .ct{order:2;margin-left:auto;flex:none}
-  .rline .minirail{order:3;flex:1 1 100%;width:auto;height:7px}
-  .rline .nx{order:4;flex:1 1 100%}
-  .rline .rflags{order:5}
-  .rline .os{order:6}
-  .rline .idle{order:7;margin-left:auto;min-width:0}
-  .rline .sp{display:none}
+  .wall .c-bar{width:26%}
+  .wall .c-step{font-size:13.5px}
+  .wall thead th,.wall tbody th,.wall tbody td{padding:10px 8px}
+  .wall thead th:first-child,.wall tbody tr>:first-child{padding-left:14px}
+  .wall thead th:last-child,.wall tbody tr>:last-child{padding-right:14px}
 
   .plinks a,.plinks .dead{font-size:12px}
 }

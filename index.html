@@ -6,7 +6,7 @@
 <title>Barangay AI Code Camp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -128,10 +128,12 @@
       <div id="roomOut"></div>
     </section>
 
+    <!-- Save status only. Sign out lives once, in the masthead beside the
+         account it signs out of; a second copy down here was the same button
+         twice on one screen. signOut() reads every [data-signout] there is, so
+         dropping one needs no change in main.js. -->
     <div class="footbar">
       <span id="savePill" class="savepill">Ready</span>
-      <span class="sp"></span>
-      <button class="btn btn-ghost btn-sm" data-signout>Sign out</button>
     </div>
   </div>
 </div>

@@ -62,7 +62,7 @@ export const CAMP = {
             <div class="codeblock"><pre>ollama pull qwen2.5:3b
 ollama list</pre><button class="copy" data-copy="ollama pull qwen2.5:3b
 ollama list">Copy</button></div>
-            <p><code>qwen2.5:3b</code> is about 2 GB and a safe default. If you already read <strong>Models 101</strong>, pull the one that fits your machine instead — you'll justify your pick in Level 1.</p>
+            <p><code>qwen2.5:3b</code> is about 2 GB and a safe default. If you already read <strong>Models 101</strong>, pull the one that fits your machine instead — you'll justify your pick in Sprint 1.</p>
             <div class="callout">Do this at home, on home wifi. Downloads are the single biggest time sink on camp day.</div>`,
           proofs: [
             { key: 'os', type: 'choice', label: 'Which operating system are you on?', options: ['Windows', 'macOS', 'Linux'], required: true },
@@ -90,9 +90,9 @@ ollama list">Copy</button></div>
               <div class="codeblock"><pre>echo $OLLAMA_ORIGINS</pre><button class="copy" data-copy="echo $OLLAMA_ORIGINS">Copy</button></div>
               <p>A lone <code>*</code> means it stuck. A blank line means it didn't — run the command above again, in a terminal you opened yourself.</p>
             </div></details>
-            <p>Skipping this is survivable — Level 2 has a script that handles it each time. Doing it now just means you never think about it again.</p>`,
+            <p>Skipping this is survivable — Sprint 2 has a script that handles it each time. Doing it now just means you never think about it again.</p>`,
           proofs: [
-            { key: 'restarted', type: 'choice', label: 'Did you quit and reopen Ollama afterwards?', options: ['Yes, restarted it', 'Not yet', "I'll use the Level 2 script instead"], required: true },
+            { key: 'restarted', type: 'choice', label: 'Did you quit and reopen Ollama afterwards?', options: ['Yes, restarted it', 'Not yet', "I'll use the Sprint 2 script instead"], required: true },
           ],
           mentorNote: 'This is the single most common setup dead-end at camps. The failure mode is nasty because Ollama looks like it’s running fine. Watch for bash syntax typed into PowerShell — OLLAMA_ORIGINS=* ollama serve does nothing on Windows and fails almost silently.',
         },
@@ -130,7 +130,7 @@ ollama list">Copy</button></div>
               </li>
               <li><strong>Vercel account</strong>, which puts your AI online. <strong>Sign in with GitHub</strong> so the two connect — <a href="https://vercel.com/signup" target="_blank" rel="noopener">vercel.com/signup</a>
                 <details class="how"><summary><i>i</i>How to connect Vercel to GitHub</summary><div class="body">
-                  <p>This is the one worth doing carefully. The link between the two accounts is what lets Vercel see your fork later, and repairing it under time pressure is the most common Level 4 delay.</p>
+                  <p>This is the one worth doing carefully. The link between the two accounts is what lets Vercel see your fork later, and repairing it under time pressure is the most common Sprint 4 delay.</p>
                   <ol>
                     <li>Open <a href="https://vercel.com/signup" target="_blank" rel="noopener">vercel.com/signup</a> and choose the free <strong>Hobby</strong> plan.</li>
                     <li>Pick <strong>Continue with GitHub</strong> — not the email option. This is the whole point of the step.</li>
@@ -155,7 +155,7 @@ node --version">Copy</button></div>
             <h4 class="opthead"><span class="tag">Way 1</span>python -m http.server</h4>
             <p>Nothing to install, it comes with Python. Take this one if <code>python --version</code> printed a number.</p>
             <details class="how"><summary><i>i</i>What this looks like</summary><div class="body">
-              <p>In Level 2 you'll open a terminal in the project folder and run one line, then leave that window open while you work:</p>
+              <p>In Sprint 2 you'll open a terminal in the project folder and run one line, then leave that window open while you work:</p>
               <div class="codeblock"><pre>python -m http.server 8000</pre><button class="copy" data-copy="python -m http.server 8000">Copy</button></div>
               <p>It prints <em>Serving HTTP on …</em> and then looks like it has frozen. That is it working — the terminal is busy being the web server.</p>
               <p>On macOS and Linux the command is usually <code>python3</code>, not <code>python</code>. If plain <code>python</code> printed nothing there, try <code>python3 --version</code> before you rule this out.</p>
@@ -176,25 +176,25 @@ node --version">Copy</button></div>
               <ol>
                 <li>Open VS Code and click <strong>Extensions</strong> in the left bar — the four-squares icon.</li>
                 <li>Search <strong>Live Server</strong> and install the one by Ritwick Dey.</li>
-                <li>In Level 2, open the project folder in VS Code, right-click <code>index.html</code> and choose <strong>Open with Live Server</strong>.</li>
+                <li>In Sprint 2, open the project folder in VS Code, right-click <code>index.html</code> and choose <strong>Open with Live Server</strong>.</li>
               </ol>
               <p>It opens your browser for you, on a port it picks — usually <code>5500</code>. Use whatever number appears in the address bar.</p>
             </div></details>
 
-            <div class="callout">Not sure which you have, or the check printed something you don't recognise? Pick the first one that gave you a version number and move on. Level 2 walks through whichever you chose, and the answer below is editable all day.</div>`,
+            <div class="callout">Not sure which you have, or the check printed something you don't recognise? Pick the first one that gave you a version number and move on. Sprint 2 walks through whichever you chose, and the answer below is editable all day.</div>`,
           proofs: [
             { key: 'gh', type: 'text', label: 'Your GitHub username', hint: 'Just the username — this is where your fork lives', required: true },
-            { key: 'serve', type: 'choice', label: 'Which of the three will you use?', hint: 'Whichever the version check printed a number for. Not sure yet? Pick the first one that answered — Level 2 walks through whichever you choose, and you can change this later', options: ['python -m http.server', 'npx serve .', 'VS Code Live Server'], required: true },
+            { key: 'serve', type: 'choice', label: 'Which of the three will you use?', hint: 'Whichever the version check printed a number for. Not sure yet? Pick the first one that answered — Sprint 2 walks through whichever you choose, and you can change this later', options: ['python -m http.server', 'npx serve .', 'VS Code Live Server'], required: true },
             { key: 'vercel', type: 'choice', label: 'Vercel account, signed in with GitHub?', options: ['Done', 'Signed up with email instead', 'Not yet'], required: true },
             { key: 'shot', type: 'screenshot', label: 'Terminal showing your git and python versions', required: true },
           ],
-          mentorNote: 'Vercel and Groq signups eat Level 4 if they aren’t pre-done — this is where you buy that time back. Anyone who signed up to Vercel with email rather than GitHub will hit friction at import; have them link the account now, not at 3pm. The install walkthroughs are folded behind the i toggles, so a room that already has the tools sees a short step and a room that doesn’t has the click paths without you reading them out. Nobody has to admit to anything to open one.',
+          mentorNote: 'Vercel and Groq signups eat Sprint 4 if they aren’t pre-done — this is where you buy that time back. Anyone who signed up to Vercel with email rather than GitHub will hit friction at import; have them link the account now, not at 3pm. The install walkthroughs are folded behind the i toggles, so a room that already has the tools sees a short step and a room that doesn’t has the click paths without you reading them out. Nobody has to admit to anything to open one.',
         },
       ],
     },
     {
       id: 'm1',
-      title: 'Level 1 — Understand & fork',
+      title: 'Sprint 1 — Understand & fork',
       steps: [
         {
           id: 'h1a',
@@ -215,7 +215,7 @@ node --version">Copy</button></div>
             { key: 'size', type: 'choice', label: 'What size band did you land on?', options: ['1B–3B', '7B–8B', '13B or larger'], required: true },
             { key: 'why', type: 'longtext', label: 'Why that model for your machine?', hint: 'Mention your RAM and whether you have a dedicated GPU — this is the part that proves you can read a model name, not just copy one', required: true },
           ],
-          mentorNote: 'The fork is fast; the concepts are what fills this level. Don’t rush the glossary — it’s the difference between following instructions and understanding them. If someone can explain why they picked Q4 over Q8, this step worked.',
+          mentorNote: 'The fork is fast; the concepts are what fills this sprint. Don’t rush the glossary — it’s the difference between following instructions and understanding them. If someone can explain why they picked Q4 over Q8, this step worked.',
         },
         {
           id: 'h1b',
@@ -226,11 +226,11 @@ node --version">Copy</button></div>
             <p>→ <a href="https://github.com/Spod101/barangayAI" target="_blank" rel="noopener">github.com/Spod101/barangayAI</a></p>
             <p><strong>On the fork screen, change the repository name to <code>&lt;surname&gt;_barangayAI</code></strong> before you click the green button. So if your surname is Dela Cruz, the name is <code>delacruz_barangayAI</code> — lowercase, no spaces.</p>
             <p>Repository name is the box right under <em>Owner</em>; GitHub fills it with <code>barangayAI</code>, so type over it. Everything else on that screen stays as it is.</p>
-            <p>Your fork then lives at <code>github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Level 4. Keep the name — the rest of the day's commands assume it, and it's how the facilitators find your repo in a room of thirty identical ones.</p>`,
+            <p>Your fork then lives at <code>github.com/&lt;your-username&gt;/&lt;surname&gt;_barangayAI</code>. That's the copy you're allowed to push to, and the one you'll deploy from in Sprint 4. Keep the name — the rest of the day's commands assume it, and it's how the facilitators find your repo in a room of thirty identical ones.</p>`,
           proofs: [
             { key: 'forkurl', type: 'text', label: "Your fork's URL", hint: 'Should have your username in it, not Spod101, and end in <surname>_barangayAI', required: true },
           ],
-          mentorNote: 'Two things to catch here, both cheap now and expensive later. People who skip the fork and clone the original: everything works until git push in Level 4, then permission denied under time pressure. And people who forget to rename — the fork screen defaults to barangayAI, so the rename is easy to click past. Renaming after the fact is fine (Settings → General → Repository name), but their clone folder and remote are then wrong too.',
+          mentorNote: 'Two things to catch here, both cheap now and expensive later. People who skip the fork and clone the original: everything works until git push in Sprint 4, then permission denied under time pressure. And people who forget to rename — the fork screen defaults to barangayAI, so the rename is easy to click past. Renaming after the fact is fine (Settings → General → Repository name), but their clone folder and remote are then wrong too.',
         },
         {
           id: 'h1c',
@@ -248,13 +248,13 @@ cd <surname>_barangayAI">Copy</button></div>
             { key: 'how', type: 'choice', label: 'How did you get the code?', options: ['git clone', 'Downloaded the ZIP'], required: true },
             { key: 'shot', type: 'screenshot', label: 'The project open in VS Code, folder name visible', hint: 'The folder in the sidebar should read <surname>_barangayAI — that one frame shows the clone worked and that you cloned your own fork', required: true },
           ],
-          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Level 4. Steer everyone to clone unless Git is genuinely broken on their machine. The screenshot is the cheap check on the previous step too: a sidebar reading plain barangayAI means they cloned the original, or forked without renaming, and both are far cheaper to fix now than at git push in Level 4.',
+          mentorNote: 'Downloading the ZIP works but strips git history and the push path, so they’d have to set up the remote by hand in Sprint 4. Steer everyone to clone unless Git is genuinely broken on their machine. The screenshot is the cheap check on the previous step too: a sidebar reading plain barangayAI means they cloned the original, or forked without renaming, and both are far cheaper to fix now than at git push in Sprint 4.',
         },
       ],
     },
     {
       id: 'm2',
-      title: 'Level 2 — Run it locally',
+      title: 'Sprint 2 — Run it locally',
       steps: [
         {
           id: 'h2a',
@@ -347,7 +347,7 @@ cd <surname>_barangayAI">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">What it's asking</span>
                   <p>Step 2, <strong>Pick a model</strong>, has a spec checker — tell it your RAM and graphics card and it sorts every model into what your machine can handle, and downloads one for you if you skipped the terminal.</p>
-                  <p>Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Level 3.</p>
+                  <p>Step 3 asks for two names: what your AI is called, and <strong>your own name</strong>, which is what gets credited as the builder when you publish. Both are required before it lets you into the chat. You'll refine all of it in Sprint 3.</p>
                 </div>
                 <div class="callout">The wizard reopens on every reload. That's normal, not a bug — close it and carry on. The book icon next to the gear opens the <strong>Camp Guidebook</strong>: these same steps, inside the app.</div>
               </li>
@@ -390,12 +390,12 @@ cd <surname>_barangayAI">Copy</button></div>
                 <div class="codeblock"><pre>http://localhost:11434/v1</pre><button class="copy" data-copy="http://localhost:11434/v1">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">The key field</span>
-                  <p>The API key box on the LOCAL card is optional — it's there for protected local endpoints, which yours isn't. Leave it blank. The <strong>Quickstart</strong> panel inside that card repeats the Ollama commands from earlier in this level if you need them again, including <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
+                  <p>The API key box on the LOCAL card is optional — it's there for protected local endpoints, which yours isn't. Leave it blank. The <strong>Quickstart</strong> panel inside that card repeats the Ollama commands from earlier in this sprint if you need them again, including <code>OLLAMA_ORIGINS=* ollama serve</code>.</p>
                 </div>
               </li>
 
               <li>
-                <p>Cloud only — on the API card, pick a provider from the dropdown: <strong>Groq</strong>, <strong>OpenAI</strong>, <strong>Together</strong>, <strong>DeepSeek</strong> or <strong>Custom</strong>. Choosing one auto-fills the endpoint URL for you. <strong>Groq</strong> is the camp default — free, and it's the same provider your published site uses in Level 4, so one key covers both.</p>
+                <p>Cloud only — on the API card, pick a provider from the dropdown: <strong>Groq</strong>, <strong>OpenAI</strong>, <strong>Together</strong>, <strong>DeepSeek</strong> or <strong>Custom</strong>. Choosing one auto-fills the endpoint URL for you. <strong>Groq</strong> is the camp default — free, and it's the same provider your published site uses in Sprint 4, so one key covers both.</p>
                 <div class="codeblock"><pre>https://api.groq.com/openai/v1</pre><button class="copy" data-copy="https://api.groq.com/openai/v1">Copy</button></div>
                 <div class="lesson">
                   <span class="tag">Custom</span>
@@ -425,7 +425,7 @@ cd <surname>_barangayAI">Copy</button></div>
               </li>
             </ol>
 
-            <div class="callout">Everything you add here is saved <strong>in this browser only</strong>. It makes <em>your</em> copy work, not your published one — the live site gets its model from a Vercel environment variable instead, which you set in Level 4.</div>`,
+            <div class="callout">Everything you add here is saved <strong>in this browser only</strong>. It makes <em>your</em> copy work, not your published one — the live site gets its model from a Vercel environment variable instead, which you set in Sprint 4.</div>`,
           proofs: [
             { key: 'card', type: 'choice', label: 'Which card did you use?', hint: 'Local is the camp default — pick Both only if you added a cloud endpoint as well', options: ['LOCAL — Ollama on my machine', 'API — a cloud provider', 'Both'], required: true },
             { key: 'provider', type: 'choice', label: 'If you used the API card, which provider?', options: ['Groq', 'DeepSeek', 'OpenAI', 'Together', 'Custom endpoint', 'Local only — no cloud provider'], required: false },
@@ -434,11 +434,117 @@ cd <surname>_barangayAI">Copy</button></div>
           ],
           mentorNote: 'This is where the room splits, so stand up and watch it. ‘No models found’, or a Test that fails, means either Ollama isn’t running or the browser can’t reach it — have them open http://localhost:11434/v1/models directly, which answers both questions at once. The API card is the fallback for machines that can’t run anything locally; the very oldest hardware fails even on small models, and pairing them with a neighbour is the other fallback. Name the trade out loud: they finish the build but miss the local-first point, and can run it locally later. Have one spend-capped key of your own ready for the two or three who arrive without one, and revoke it after the camp.',
         },
+        {
+          id: 'h2e',
+          title: 'Keep more than one conversation',
+          minutes: 10,
+          body: `
+            <p>Your chats are not in the cloud, and they are not thrown away when you close the tab. They are in a database inside your browser. Two minutes proves both halves of that.</p>
+
+            <ol class="acts">
+              <li>
+                <p>Click <strong>New Conversation</strong> at the top of the sidebar, then ask your AI something completely different.</p>
+                <div class="lesson">
+                  <span class="tag">Where the first one went</span>
+                  <p>Nowhere. It is under <strong>Recent</strong>, one line per conversation — click it and the whole thread comes back. Each one keeps its own history, which is why a chat about your barangay's records doesn't leak into a chat about homework.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Name one of them. Click the conversation title at the top of the chat, type over it, press <span class="kbd">Enter</span>.</p>
+              </li>
+
+              <li>
+                <p>Now reload the page — <span class="kbd">F5</span>, or <span class="kbd">Ctrl</span> <span class="kbd">R</span>. Both conversations should still be listed, with their messages and the name you typed.</p>
+                <div class="lesson">
+                  <span class="tag">Why the reload is the test</span>
+                  <p>A conversation that only exists in the page's memory looks exactly like a saved one until something makes the page start over. Until you reload, you have checked nothing.</p>
+                  <p>What makes it survive: the app carries a real SQLite database compiled to run in the browser, and keeps it in <strong>IndexedDB</strong> — your browser's own on-disk storage. No account, no server, no sync.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div class="callout">Nothing syncs, and that is the trade. The same app in a different browser, or on a different laptop, is a different set of conversations — and clearing your browsing data clears these with it. Private by default means nobody else holds a copy, including you.</div>`,
+          proofs: [
+            { key: 'count', type: 'choice', label: 'How many conversations are in Recent?', options: ['Two', 'Three or more'], required: true },
+            { key: 'renamed', type: 'text', label: 'What did you rename one of them to?', hint: 'The title you typed over — this is the bit that proves the rename saved, not just the chat', required: true },
+            { key: 'survived', type: 'choice', label: 'After the reload, were they still there?', hint: 'Answer what actually happened. An empty list is a real result and it means your browser is refusing to store anything — worth a facilitator, not a retry', options: ['Yes — both, with their messages', 'Listed, but the messages were gone', 'Gone — the list was empty'], required: true },
+            { key: 'shot', type: 'screenshot', label: 'The sidebar after the reload, showing more than one conversation', hint: 'Taken after the reload, not before — the frame has to include Recent with your renamed conversation in it', required: true },
+          ],
+          mentorNote: 'Cheap step, real diagnostic. Anyone whose conversations vanish on reload is in a browser that will not persist anything — a private/incognito window, or site data blocked for localhost — and the same block will eat their settings, their sources and their published file later in the day. Fix it here, in a normal window, rather than at Publish when nothing they customized comes back. The desk raises this answer as an alert, so watch for it. Second thing to say out loud: nothing syncs, so the laptop they build on is the laptop their chats live on.',
+        },
+        {
+          id: 'h2f',
+          title: 'Prove it works with the internet off',
+          minutes: 10,
+          body: `
+            <p>This is the claim the whole camp rests on: your AI keeps working when the internet doesn't. Don't take it on trust — take the internet away and watch.</p>
+
+            <ol class="acts">
+              <li>
+                <p>Reload the app once while everything is still working normally.</p>
+                <div class="lesson">
+                  <span class="tag">Why</span>
+                  <p>On your first visit the app quietly filed a copy of every file it needs to start — the page, the styles, the code, the fonts, the database engine. One reload is how you make sure that finished before you pull the ground out from under it.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Turn your wifi off, or unplug the cable.</p>
+              </li>
+
+              <li>
+                <p>Stop the web server. Go to the terminal running it and press <span class="kbd">Ctrl</span> <span class="kbd">C</span>.</p>
+                <div class="lesson">
+                  <span class="tag">This is the real test</span>
+                  <p>Your page is served from your own machine, so switching the wifi off proves nothing on its own — <code>localhost</code> never went near the internet. Killing the server that serves the page is the honest version of the test.</p>
+                </div>
+                <details class="how"><summary><i>i</i>How to stop yours</summary><div class="body">
+                  <p><strong>python -m http.server</strong> or <strong>npx serve .</strong> — click that terminal window and press <span class="kbd">Ctrl</span> <span class="kbd">C</span>. It goes back to a normal prompt.</p>
+                  <p><strong>VS Code Live Server</strong> — click <strong>Port: 5500</strong> in the blue bar at the bottom of the window to stop it.</p>
+                  <p>Leave the <em>Ollama</em> terminal alone. That one is the model, and it's the half that has to keep running.</p>
+                </div></details>
+              </li>
+
+              <li>
+                <p>Reload the page. It still opens.</p>
+                <div class="lesson">
+                  <span class="tag">What just answered you</span>
+                  <p>A <strong>service worker</strong> — a small script the browser keeps running beside the page. It has the copy from action 1, and when nothing else can answer, it does. Nothing was fetched; the page you are looking at came off your own disk.</p>
+                  <p>This is also why <code>file://</code> was refused back in <em>Serve the app in your browser</em>: a service worker is only allowed on <code>localhost</code> or <code>https</code>. Serving it properly is what bought you this.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Ask your AI something, offline, and read the reply.</p>
+                <div class="lesson">
+                  <span class="tag">If nothing comes back</span>
+                  <p>Check which endpoint is selected in the picker. A <strong>cloud</strong> model cannot answer with the wifi off — that is not a fault, it's the entire point. Switch to your local Ollama endpoint and ask again. Web search stops working offline too, for the same reason.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Put the wifi back on and start the web server again. You need both for Sprint 4.</p>
+                <p class="cmdlabel">Windows</p>
+                <div class="codeblock"><pre>python -m http.server 8000</pre><button class="copy" data-copy="python -m http.server 8000">Copy</button></div>
+                <p class="cmdlabel">macOS / Linux <span class="note">python3, not python</span></p>
+                <div class="codeblock"><pre>python3 -m http.server 8000</pre><button class="copy" data-copy="python3 -m http.server 8000">Copy</button></div>
+              </li>
+            </ol>
+
+            <div class="callout">Remember what you just saw when somebody tells you AI needs a data centre. No signal, no server, no account, no bill — and it still answered. That is the version of this you built.</div>`,
+          proofs: [
+            { key: 'opened', type: 'choice', label: 'With the server stopped, did the app still open?', options: ['Yes — it opened from the cache', 'No — the browser showed an error page'], required: true },
+            { key: 'asked', type: 'text', label: 'What did you ask it while you were offline?', required: true },
+            { key: 'shot', type: 'screenshot', label: 'The app answering with the internet off', hint: 'Capture the whole screen, not just the app — the wifi icon in your system tray or menu bar is the part that makes this frame worth anything', required: true },
+          ],
+          mentorNote: 'The best two minutes of the camp if you run it as a room: everyone offline at the same time, everyone still chatting. Two failure modes, both quick. An error page instead of the app means no service worker — they are on file:// or a LAN IP rather than localhost, so there was never a cached copy to serve. No reply means the cloud endpoint is selected; have them switch to local rather than debug a network that is off on purpose. Then say the last line twice: wifi back on, server back up. A room that walks into Sprint 4 with a dead web server reads it as the deploy being broken.',
+        },
       ],
     },
     {
       id: 'm3',
-      title: 'Level 3 — Customize',
+      title: 'Sprint 3 — Customize',
       steps: [
         {
           id: 'h3a',
@@ -455,7 +561,7 @@ cd <surname>_barangayAI">Copy</button></div>
             { key: 'prompt', type: 'longtext', label: 'Paste your system prompt', hint: "The actual text you wrote — this is the most interesting thing you'll make today", required: true },
             { key: 'shot', type: 'screenshot', label: 'Your AI, named and answering in character', required: true },
           ],
-          mentorNote: 'This is the fun level. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones. Watch the one-or-two-sentence description too: the usual first attempt is a paraphrase of the prompt, and ‘who is it for, and what do they get’ is the question that fixes it. Whatever they write there is what their post and write-up lead with.',
+          mentorNote: 'This is the fun sprint. Let it run long if the room is engaged — customization is where people take ownership. The system prompts are also the best material for the closing demo, so keep an eye out for good ones. Watch the one-or-two-sentence description too: the usual first attempt is a paraphrase of the prompt, and ‘who is it for, and what do they get’ is the question that fixes it. Whatever they write there is what their post and write-up lead with.',
         },
         {
           id: 'h3b',
@@ -489,11 +595,53 @@ cd <surname>_barangayAI">Copy</button></div>
           ],
           mentorNote: 'If anyone says ‘it’s now trained on my file’, correct it there and then — grounded, not trained. Opening What the model actually read and pointing at the matching-chunks row is the single best teaching moment in the camp: the retrieved passages are usually half of what the model saw, and the participant’s own question is one percent of it. That panel is a required upload now, so a step where it is missing or still collapsed is obvious on the desk without reading a word. This step takes two screenshots, so tell them to click the box they mean before pasting.',
         },
+        {
+          id: 'h3d',
+          title: 'Give it a face and sign your work',
+          minutes: 10,
+          body: `
+            <p>Two fields on the <strong>Personalize</strong> tab decide whether your published AI looks like somebody's work or like an untouched starter template. Do them now, while you are still in Settings — the next sprint pushes this live.</p>
+
+            <ol class="acts">
+              <li>
+                <p>Open the gear icon, stay on <strong>Personalize</strong>, and find <strong>Profile Picture</strong>. Click the face itself — the one with the little camera badge — or the <strong>Upload</strong> button beside it, and pick an image.</p>
+                <div class="lesson">
+                  <span class="tag">What happens to your image</span>
+                  <p>Any PNG, JPEG, WebP or GIF up to 8 MB. The app squares it off and shrinks it to 128 pixels, which lands at around 5 KB — about one message of text. That is deliberate: the picture has to travel inside the file you publish in the next sprint, and a 4 MB photo in there would make that file useless.</p>
+                  <p>It then shows beside every reply, and on your live site. <strong>Remove</strong> puts the initials back if you change your mind.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Fill in <strong>Creator Name</strong> with your own name, the way you want to be credited.</p>
+                <div class="lesson">
+                  <span class="tag">Why it has a red asterisk</span>
+                  <p>It is the byline on your published AI: <em>“&lt;your AI&gt; — built by &lt;you&gt; at a DEVCON Barangay AI Code Camp”</em>, under the composer where every visitor sees it. So publishing is blocked without it — the download in the next sprint simply refuses and sends you back here.</p>
+                  <p>You typed a name into the welcome wizard already. This is where you fix the spelling, or swap a nickname for the name you would put on a CV.</p>
+                </div>
+              </li>
+
+              <li>
+                <p>Press <strong>Save</strong>, then look at the header and the last reply on screen. The face and the name should both have changed.</p>
+              </li>
+            </ol>
+
+            <p>One more thing on that tab, if you have time: the <strong>Persona</strong> dropdown at the top holds more than one personality. <strong>+ New</strong> saves another, and the one selected is what the AI uses in chat — so you can keep a strict tutor and a barangay helper side by side and switch between them instead of rewriting your system prompt.</p>
+
+            <div class="callout">Your picture and your name are the two things in this app that are about <em>you</em> rather than the model. Everything else you tuned today makes it work. These two make it yours.</div>`,
+          proofs: [
+            { key: 'creator', type: 'text', label: 'Your creator name, exactly as you typed it', hint: 'This is the byline strangers will read on your live site — check the spelling now, not after you deploy', required: true },
+            { key: 'pic', type: 'choice', label: 'Profile picture?', options: ['Uploaded one', 'Kept the initials'], required: true },
+            { key: 'personas', type: 'choice', label: 'How many personas did you save?', hint: 'Optional — one is a perfectly good answer', options: ['Just the one', 'Two or more'], required: false },
+            { key: 'shot', type: 'screenshot', label: 'Settings → Personalize, with your picture and creator name filled in', required: true },
+          ],
+          mentorNote: 'Short step, and it removes a Sprint 4 dead-end: the publish download refuses without a creator name, and the refusal reads as a broken button to anyone who did not put it there. Getting it in now means nobody meets that at 6pm. Watch for two things — a name typed as “student” or a single initial, which defeats the point of the byline, and someone uploading a 4 MB photo and asking why the app took a second: it is downscaling to 128px so the picture can ride inside my-ai.json. The persona dropdown is the part to demo if the room is ahead; skip it entirely if they are behind.',
+        },
       ],
     },
     {
       id: 'm4',
-      title: 'Level 4 — Publish',
+      title: 'Sprint 4 — Publish',
       steps: [
         {
           id: 'h4a',
@@ -568,18 +716,18 @@ git push">Copy</button></div>`,
           body: `
             <div class="callout"><strong>Remember which one is the real one.</strong> The shared link runs on somebody else's computer, using a hosted model. The AI on <em>your</em> machine is the one that's free, offline, and private — nobody can meter it, price it, or switch it off. That's the one you actually built today.</div>
             <p>Tell us how the day went. Four dropdowns are required and the rest is optional — two minutes, and it genuinely shapes the next camp.</p>
-            <p>These answers go to the facilitator, not into your public write-up. The one exception is which level you found hardest, which appears in your write-up under <em>What I learned</em>.</p>`,
+            <p>These answers go to the facilitator, not into your public write-up. The one exception is which sprint you found hardest, which appears in your write-up under <em>What I learned</em>.</p>`,
           proofs: [
             { key: 'pace', type: 'choice', label: 'How was the pace?', options: ['Too slow', 'About right', 'Too fast'], required: true },
-            { key: 'hardest', type: 'choice', label: 'Which level was hardest?', options: ['Pre-install', 'Level 1 — Fork', 'Level 2 — Run it locally', 'Level 3 — Customize', 'Level 4 — Publish'], required: true },
+            { key: 'hardest', type: 'choice', label: 'Which sprint was hardest?', options: ['Pre-install', 'Sprint 1 — Fork', 'Sprint 2 — Run it locally', 'Sprint 3 — Customize', 'Sprint 4 — Publish'], required: true },
             { key: 'again', type: 'choice', label: 'Could you build this again tomorrow, on your own?', hint: 'Nobody is marking this — “not yet” is a normal answer after one day, and it tells us which parts to slow down next time', options: ['Yes, from scratch', 'Yes, with this checklist open', 'Not yet — I followed along'], required: true },
             { key: 'recommend', type: 'choice', label: 'Would you tell a friend to come to the next one?', options: ['Definitely', 'Probably', 'Probably not'], required: true },
             { key: 'stuck', type: 'choice', label: 'When you got stuck, how long did you stay stuck?', hint: 'How quickly help reached you — this is about us, not you', options: ['Never really got stuck', 'A few minutes', 'Long enough to fall behind', 'I never got it working'], required: false },
             { key: 'next', type: 'choice', label: 'What happens to your AI after today?', options: ['Keep building on it', 'Leave it up as it is', 'Take it down', 'Not sure yet'], required: false },
             { key: 'bestbit', type: 'text', label: 'What is the one thing you will remember?', hint: 'A moment, not a review — the bit where something clicked', required: false },
-            { key: 'feedback', type: 'longtext', label: 'Anything we should change?', hint: 'Optional, but read by a human', required: false },
+            { key: 'feedback', type: 'longtext', label: 'What should we improve?', hint: 'Optional, but read by a human', required: false },
           ],
-          mentorNote: 'Collect this before people leave the room — response rate drops off a cliff once they’re out the door. Hardest level is your planning data for the next camp; expect Level 2 to win and budget accordingly. ‘Could you build this again’ and the stuck question are the two that tell you whether the day taught anything or just got followed: a room that finished but answers ‘not yet’ across the board means the pace was too fast whatever the pace answers say, and ‘long enough to fall behind’ clustering on one level means you were short a facilitator there. Only four of the eight are required, so nobody is trapped at the door.',
+          mentorNote: 'Collect this before people leave the room — response rate drops off a cliff once they’re out the door. Hardest sprint is your planning data for the next camp; expect Sprint 2 to win and budget accordingly. ‘Could you build this again’ and the stuck question are the two that tell you whether the day taught anything or just got followed: a room that finished but answers ‘not yet’ across the board means the pace was too fast whatever the pace answers say, and ‘long enough to fall behind’ clustering on one sprint means you were short a facilitator there. Only four of the eight are required, so nobody is trapped at the door.',
         },
       ],
     },

@@ -58,7 +58,13 @@ const ALERTS = [
     step: 'p2', key: 'restarted', is: 'Not yet',
     level: 'warn', tag: 'CORS',
     title: 'Ollama not restarted after setting OLLAMA_ORIGINS',
-    what: 'The classic Level 2 dead-end: the server looks healthy and every request from the browser fails. Have them restart Ollama, or point them at the bundled script in Level 2.',
+    what: 'The classic Sprint 2 dead-end: the server looks healthy and every request from the browser fails. Have them restart Ollama, or point them at the bundled script in Sprint 2.',
+  },
+  {
+    step: 'h2e', key: 'survived', is: 'Gone — the list was empty',
+    level: 'warn', tag: 'NO STORAGE',
+    title: 'Browser is not keeping anything',
+    what: 'Conversations gone after a reload means storage is blocked — a private window, or site data refused for localhost. The same block will eat their settings, their sources and their published file, so it is cheaper to move them to a normal window now than at Publish.',
   },
   {
     step: 'h4b', key: 'keywhere', is: "I haven't added one yet",
@@ -268,20 +274,28 @@ function wallHTML(frontier) {
     if (wall >= 0 && list[wall].id === frontier) wall = -1;
   }
 
-  return `<div class="wall">
-    <span class="eyebrow">Stamped, step by step</span>
-    ${list
+  return `<div class="tablewrap">
+    <table class="wall">
+    <caption>Stamped, step by step</caption>
+    <thead><tr>
+      <th scope="col" class="c-n">#</th>
+      <th scope="col">Step</th>
+      <th scope="col" class="c-bar">Stamped by</th>
+      <th scope="col" class="c-num">Of ${roster.length}</th>
+    </tr></thead>
+    <tbody>${list
       .map((s, i) => {
         const pct = roster.length ? Math.round((counts[i] / roster.length) * 100) : 0;
-        return `<div class="wrow${i === wall ? ' drop' : ''}">
-          <span class="wn">${stepNumber(s.id)}</span>
-          <span class="wt">${esc(s.title)}</span>
-          ${i === wall ? '<span class="wtag">stalls here</span>' : ''}
-          <span class="wbar"><i style="width:${pct}%"></i></span>
-          <span class="wc">${counts[i]}/${roster.length}</span>
-        </div>`;
+        return `<tr${i === wall ? ' class="drop"' : ''}>
+          <td class="c-n">${stepNumber(s.id)}</td>
+          <th scope="row" class="c-step">${esc(s.title)}${
+            i === wall ? '<span class="wtag">stalls here</span>' : ''}</th>
+          <td class="c-bar"><span class="wbar">${pct ? `<i style="width:${pct}%"></i>` : ''}</span></td>
+          <td class="c-num">${counts[i]}</td>
+        </tr>`;
       })
-      .join('')}
+      .join('')}</tbody>
+    </table>
   </div>`;
 }
 
@@ -329,12 +343,25 @@ export function renderRoom() {
       <span class="eyebrow">${roster.length} in the room</span>
       <span class="sp"></span>
       <span class="eyebrow">Sort</span>
-      <div class="segs">${Object.keys(SORTS)
+      <div class="segs" role="group" aria-label="Sort the roster">${Object.keys(SORTS)
         .map((k) => `<button type="button" class="seg" data-sort="${k}" aria-pressed="${k === sort}">${SORT_LABEL[k]}</button>`)
         .join('')}</div>
     </div>
-    <div class="roster">${[...roster].sort(SORTS[sort] || SORTS.need).map(rowHTML).join('')}</div>
-    <p class="deskfoot">Tap anyone to see their answers and screenshots.</p>`;
+    <div class="tablewrap">
+    <table class="roster">
+      <caption>Tap anyone to see their answers and screenshots.</caption>
+      <thead><tr>
+        ${th('Name', 'c-name', 'name')}
+        ${th('OS', 'c-os')}
+        ${th('Progress', 'c-bar', 'progress')}
+        ${th('Steps', 'c-num')}
+        ${th('Up next', 'c-next')}
+        ${th('Flags', 'c-flags')}
+        ${th('Quiet for', 'c-quiet', 'need')}
+      </tr></thead>
+      <tbody>${[...roster].sort(SORTS[sort] || SORTS.need).map(rowHTML).join('')}</tbody>
+    </table>
+    </div>`;
 
   $$('#roomOut [data-sort]').forEach((b) =>
     b.addEventListener('click', () => { sort = b.dataset.sort; renderRoom(); }),
@@ -342,6 +369,11 @@ export function renderRoom() {
   $$('#roomOut [data-user]').forEach((b) =>
     b.addEventListener('click', () => openParticipant(b.dataset.user)),
   );
+}
+
+function th(label, cls, sortedBy = '') {
+  const on = sortedBy && sort === sortedBy;
+  return `<th scope="col" class="${cls}"${on ? ' aria-sort="descending"' : ''}>${label}</th>`;
 }
 
 function rowHTML(p) {
@@ -356,16 +388,18 @@ function rowHTML(p) {
   // Why this one is coloured and the one above it isn't.
   const why = done ? '' : ` title="${next ? `Step ${stepNumber(next.id)} is budgeted at ${idleBands(p).budget} min` : ''}"`;
 
-  return `<button type="button" class="rline${hot ? ' hot' : ''}" data-user="${esc(p.id)}">
-    <span class="nm">${esc(p.name || '(no name)')}</span>
-    <span class="mt os">${esc(p.os || '')}</span>
-    <span class="minirail"><i style="width:${pct}%"></i></span>
-    <span class="mt ct">${n}/${TOTAL}</span>
-    <span class="nx">${done ? 'Complete' : next ? `${stepNumber(next.id)} · ${esc(next.title)}` : '—'}</span>
-    <span class="sp"></span>
-    <span class="rflags">${flags.map((f) => `<span class="rflag ${f.level}">${f.tag}</span>`).join('')}</span>
-    <span class="idle ${lvl}"${why}>${done ? '' : quiet}</span>
-  </button>`;
+  // The row is clickable, and the name is a real button inside it — the whole
+  // row for a mouse, one focus stop and Enter for a keyboard. The click on the
+  // button bubbles to the row, so the handler is bound once either way.
+  return `<tr class="rline${hot ? ' hot' : ''}" data-user="${esc(p.id)}">
+    <th scope="row" class="c-name"><button type="button" class="rowbtn">${esc(p.name || '(no name)')}</button></th>
+    <td class="c-os" data-label="OS">${esc(p.os || '')}</td>
+    <td class="c-bar" data-label="Progress"><span class="minirail">${pct ? `<i style="width:${pct}%"></i>` : ''}</span></td>
+    <td class="c-num" data-label="Steps">${n}<span class="of">/${TOTAL}</span></td>
+    <td class="c-next" data-label="Up next">${done ? '<span class="ok">Complete</span>' : next ? `<span class="sn">${stepNumber(next.id)}</span>${esc(next.title)}` : '—'}</td>
+    <td class="c-flags" data-label="Flags">${flags.map((f) => `<span class="rflag ${f.level}">${f.tag}</span>`).join('')}</td>
+    <td class="c-quiet ${lvl}" data-label="Quiet for"${why}>${done ? '' : quiet}</td>
+  </tr>`;
 }
 
 // ── one participant ──────────────────────────────────────────────────
