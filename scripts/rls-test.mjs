@@ -246,6 +246,16 @@ if (fi > -1) {
     // be an ordinary participant. The cleanup at the end takes the promoted
     // account with it.
     {
+      // B has done nothing so far — deliberately, since two assertions above
+      // check that B's unfiltered selects come back empty. Give them one real
+      // stamp now, because "promotion does not erase their work" is only worth
+      // asserting against work that exists.
+      const { error } = await B.sb.from('progress').upsert([
+        { user_id: B.id, step_id: 'p1', values: { model: 'qwen2.5:3b' }, done: true, done_at: new Date().toISOString() },
+      ], { onConflict: 'user_id,step_id' });
+      check('B stamps a step of their own before being promoted', !error, error?.message);
+    }
+    {
       const { error: wrong } = await F.rpc('promote_to_facilitator', { target: B.id, passphrase: 'hunter2' });
       const { data: still } = await F.from('profiles').select('role').eq('id', B.id).maybeSingle();
       check('The wrong passphrase promotes nobody', !!wrong && still?.role === 'participant',
@@ -275,6 +285,18 @@ if (fi > -1) {
       const { data: room } = await B.sb.from('v_roster').select('id');
       check('The newly promoted account sees the room without signing in again',
         (room?.length ?? 0) >= 2, `${room?.length ?? 0} rows`);
+    }
+    {
+      // promoted_at is what lets the desk keep showing their work: the roster
+      // hides staff, except staff promoted during the camp. Without this stamp
+      // a participant's stamped steps would drop out of the room's counts and
+      // out of the spreadsheet at the moment they were handed the desk.
+      const { data: b } = await F.from('v_roster')
+        .select('promoted_at, role, steps_done').eq('id', B.id).maybeSingle();
+      check('Promotion stamps promoted_at, so the desk can still show their work',
+        !!b?.promoted_at, JSON.stringify(b));
+      check('A promoted account keeps the steps it stamped as a participant',
+        Number(b?.steps_done) === 1, `steps_done=${b?.steps_done}`);
     }
   }
 } else {

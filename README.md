@@ -53,8 +53,9 @@ before them.
 
 Then [`0008_promote_facilitator.sql`](supabase/migrations/0008_promote_facilitator.sql),
 which lets a facilitator hand the desk to a second one from inside the app,
-behind a passphrase. Skip it and promotion stays an SQL Editor job — nothing
-else changes.
+behind a passphrase. It adds `profiles.promoted_at` and so drops and recreates
+`v_roster` again — run it after `0007`, not before. Skip it and promotion stays
+an SQL Editor job; nothing else changes.
 
 Finally, [`0002_realtime.sql`](supabase/migrations/0002_realtime.sql) to make the
 facilitator room update live. It's optional — skip it and the desk falls back to
@@ -480,8 +481,21 @@ update public.profiles set role = 'participant' where email = 'them@example.com'
 
 A promoted account gets the desk on the session it is already holding — no
 sign-out and back in — because `is_facilitator()` reads the table rather than
-the JWT. They also leave the roster the moment it refreshes; the desk lists the
-room, and they are no longer in it.
+the JWT.
+
+**Their own work stays on the roster.** The desk hides facilitators on purpose:
+whoever sets a project up walks the steps to check the app works, and that
+clicking would otherwise land in the room's counts, the per-step chart and the
+spreadsheet as if it were somebody's morning. That reasoning covers the account
+that was staff before the doors opened. It is exactly wrong for someone who sat
+through the whole camp and got handed the desk at 2pm — their stamps are as real
+as anyone's, and dropping them at the moment of promotion would be losing data.
+
+`role` alone cannot tell those two apart, so the promotion records itself:
+`promoted_at` is null for always-staff and a timestamp for *was a participant*.
+The roster keeps the second kind, tagged **Staff** under the name, and their
+sheet says when they were promoted instead of offering to promote them again.
+`rls-test.mjs` asserts a promoted account keeps the steps it stamped.
 
 ### Sharing
 

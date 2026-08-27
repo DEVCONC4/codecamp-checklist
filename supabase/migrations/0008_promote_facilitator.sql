@@ -19,7 +19,30 @@
 -- this is the deliberate pause in front of the irreversible-from-the-app bit.
 -- It is not a secret. Everyone at the camp will end up knowing the word.
 --
+-- The other half of this migration is `profiles.promoted_at`, which exists so
+-- the desk can keep showing a promoted person's work. See the block below.
+--
 -- Safe to re-run.
+
+-- ──────────────────────────────────────────────────────── promoted_at ──
+-- Why a column and not just `role = 'facilitator'`.
+--
+-- The desk drops facilitators from the roster on purpose: whoever sets a
+-- project up clicks through the steps to check the app works, and that noise
+-- would otherwise land in the room's counts, the per-step chart and the
+-- spreadsheet as if it were somebody's morning. Test data, correctly hidden.
+--
+-- That reasoning covers the account that was staff before the camp started. It
+-- is exactly wrong for someone who sat through the whole camp, did the work,
+-- and got handed the desk at 2pm — their stamps are as real as anyone's, and
+-- losing them the moment they are promoted is losing real data. `role` alone
+-- cannot tell those two apart, so the promotion records itself: null means
+-- always-staff, a timestamp means "was a participant, and their work counts".
+--
+-- Nothing writes this but the function below.
+
+alter table public.profiles
+  add column if not exists promoted_at timestamptz;
 
 -- ─────────────────────────────────────────────────────── the passphrase ──
 -- Its own function so changing it is one `create or replace` and nothing that
@@ -62,8 +85,11 @@ begin
 
   perform set_config('app.promoting', 'on', true);
 
+  -- coalesce, so re-running on someone already promoted keeps the original
+  -- moment rather than sliding it forward.
   update public.profiles
-     set role = 'facilitator'
+     set role        = 'facilitator',
+         promoted_at = coalesce(promoted_at, now())
    where id = target
   returning * into promoted;
 
@@ -109,3 +135,31 @@ $$;
 
 -- The trigger itself is unchanged and still points at this function; 0001
 -- created it and re-creating it here would only churn.
+
+-- ────────────────────────────────────────────────────────── v_roster ──
+-- Dropped and recreated rather than replaced, for the same reason 0007 did it:
+-- `create or replace view` is fussy about column lists, and this is the third
+-- migration to touch the shape. Identical to 0007's apart from `promoted_at`.
+
+drop view if exists public.v_roster;
+
+create view public.v_roster
+with (security_invoker = on) as
+select
+  p.id,
+  p.name,
+  p.email,
+  p.os,
+  p.role,
+  p.promoted_at,
+  p.group_id,
+  g.code                                       as group_code,
+  g.name                                       as group_name,
+  p.created_at,
+  count(*) filter (where pr.done)              as steps_done,
+  max(pr.done_at) filter (where pr.done)       as last_stamp_at,
+  max(pr.updated_at)                           as last_activity_at
+from public.profiles p
+left join public.groups g on g.id = p.group_id
+left join public.progress pr on pr.user_id = p.id
+group by p.id, g.id;

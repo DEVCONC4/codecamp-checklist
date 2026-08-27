@@ -516,6 +516,15 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
 .rowbtn{display:block;width:100%;font-family:var(--display);font-weight:800;font-size:15px;color:inherit;
   background:none;border:0;padding:0;text-align:left;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rowbtn:hover{color:var(--stamp)}
+/* Somebody promoted mid-camp. Sits under the name rather than beside it —
+   .rowbtn is a block and the column is 19% wide, so a chip on the same line
+   would fight the name for room on exactly the longest names. Deliberately
+   plainer than .gtag: this is a note about the person, not a thing to scan
+   the column for. */
+.staff{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;margin-top:5px;border-radius:999px;
+  background:var(--panel-2);color:var(--ink-soft);white-space:nowrap}
+.rline:hover .staff{background:var(--paper)}
 .roster tbody .c-os{font-size:13px;color:var(--ink-faint)}
 /* Counts are numbers: mono and tabular, so the column reads down. The total is
    the same on every row, so it recedes and the count itself carries. */
@@ -591,6 +600,9 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
   background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:10px 13px}
 .ppromote input:focus-visible{outline:none;border-color:var(--stamp)}
 .ppromote input:disabled,.ppromote button:disabled{opacity:.55;cursor:default}
+/* Same box, nothing to fill in — it is telling you the state, not asking. */
+.ppromote.is-staff .eyebrow{margin-bottom:0}
+.ppromote.is-staff .pnote{margin-top:6px}
 .pnote{font-size:12px;line-height:1.45;color:var(--ink-faint);margin:9px 0 0}
 
 /* the group list */

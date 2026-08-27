@@ -150,15 +150,22 @@ export async function loadRoom() {
   if (g.error) throw g.error;
 
   groups = gr;
-  roster = (r.data || []).filter((p) => p.role !== 'facilitator');
+  // Staff are off the roster, with one exception: somebody promoted during the
+  // camp. The filter is here to keep setup clicking — the account that made the
+  // project and walked the steps to check they work — out of the room's
+  // numbers. Someone who did the whole camp and was handed the desk at 2pm is
+  // not that, and dropping their stamps the moment they are promoted would lose
+  // real work. promoted_at is what tells the two apart; 0008 stamps it.
+  roster = (r.data || []).filter((p) => p.role !== 'facilitator' || p.promoted_at);
 
   // A group can be deleted while its filter is the one on screen. Falling back
   // to everyone is better than an empty roster with no visible cause.
   if (group !== 'all' && group !== '' && !groups.some((x) => x.id === group)) group = 'all';
   const ids = new Set(roster.map((p) => p.id));
 
-  // Staff answers are test data. They are already out of the roster; keep them
-  // out of the room's numbers and out of the spreadsheet too.
+  // Setup answers are test data. They are already out of the roster; keep them
+  // out of the room's numbers and out of the spreadsheet too. Promoted staff
+  // are still in `ids`, so their real work stays in both.
   subs = (s.data || []).filter((x) => ids.has(x.user_id));
 
   answer = new Map();
@@ -192,6 +199,10 @@ const nextStep = (userId) => REQ.find((s) => !isDone(userId, s.id)) || null;
 // they walked in, and that is precisely the person worth surfacing.
 const idleMs = (p) => Date.now() - new Date(p.last_activity_at || p.created_at).getTime();
 const idleMin = (p) => Math.floor(idleMs(p) / 60000);
+
+// A camp is one day, so the clock time is the whole story — a date beside it
+// would be noise on every row that could ever show one.
+const hhmm = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 function ago(ms) {
   const m = Math.floor(ms / 60000);
@@ -480,7 +491,9 @@ function rowHTML(p) {
   // row for a mouse, one focus stop and Enter for a keyboard. The click on the
   // button bubbles to the row, so the handler is bound once either way.
   return `<tr class="rline${hot ? ' hot' : ''}" data-user="${esc(p.id)}">
-    <th scope="row" class="c-name"><button type="button" class="rowbtn">${esc(p.name || '(no name)')}</button></th>
+    <th scope="row" class="c-name"><button type="button" class="rowbtn">${esc(p.name || '(no name)')}</button>${
+      p.role === 'facilitator' ? '<span class="staff" title="Promoted during the camp — their work still counts">Staff</span>' : ''
+    }</th>
     <td class="c-group" data-label="Group">${groupCell(p)}</td>
     <td class="c-os" data-label="OS">${esc(p.os || '')}</td>
     <td class="c-bar" data-label="Progress"><span class="minirail">${pct ? `<i style="width:${pct}%"></i>` : ''}</span></td>
@@ -544,15 +557,20 @@ export async function openParticipant(userId) {
         ${groups.map((g) => `<option value="${esc(g.id)}"${p.group_id === g.id ? ' selected' : ''}>${esc(groupLabel(g))}</option>`).join('')}
       </select>
     </div>
-    <form class="ppromote" id="pPromote" autocomplete="off">
+    ${p.role === 'facilitator'
+      ? `<div class="ppromote is-staff">
+      <span class="eyebrow">Facilitator${p.promoted_at ? ' since ' + esc(hhmm(p.promoted_at)) : ''}</span>
+      <p class="pnote">They have the desk. Their own work is below and still counts toward the room — promotion does not erase it.</p>
+    </div>`
+      : `<form class="ppromote" id="pPromote" autocomplete="off">
       <label class="eyebrow" for="pPass">Make them a facilitator</label>
       <div class="prow">
         <input type="password" id="pPass" placeholder="Passphrase" autocomplete="off"
                aria-describedby="pPromoteNote">
         <button type="submit" class="btn btn-sm" id="pPromoteGo">Promote</button>
       </div>
-      <p class="pnote" id="pPromoteNote">Hands over the desk: every participant's answers and screenshots, and the power to do this again. They leave the roster.</p>
-    </form>
+      <p class="pnote" id="pPromoteNote">Hands over the desk: every participant's answers and screenshots, and the power to do this again. Their own progress stays on the roster.</p>
+    </form>`}
     ${links.length
       ? `<div class="plinks">${links
           .map(([k, v]) => {
@@ -605,38 +623,43 @@ export async function openParticipant(userId) {
     }
   });
 
-  // The rare one. No confirm() in front of it — typing a passphrase is already
-  // the deliberate act, and a dialog on top of it would only teach people to
+  // The rare one, and absent from the sheet of someone who already has the
+  // desk. No confirm() in front of it — typing a passphrase is already the
+  // deliberate act, and a dialog on top of it would only teach people to
   // dismiss dialogs. The word is not checked here; it goes to the database,
   // which is the only place a check would mean anything (see promote.js).
   //
-  // On success they are staff, and loadRoom() drops them from the roster —
-  // facilitators are filtered out of it — so the sheet is closed rather than
-  // left open on somebody who is no longer there.
+  // The sheet is closed and reopened rather than left alone, because the block
+  // it is sitting in has to become the "they have the desk" one. They keep
+  // their place on the roster underneath — that is the point of promoted_at.
   const promote = $('#pPromote', el);
-  const pass = $('#pPass', el);
-  const go = $('#pPromoteGo', el);
-  promote.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    if (!pass.value.trim()) { pass.focus(); return; }
-    pass.disabled = go.disabled = true;
-    try {
-      await promoteToFacilitator(userId, pass.value);
-      close();
-      await loadRoom();
-      renderRoom();
-      toast(`${p.name || 'They'} is a facilitator now — off the roster, on the desk`);
-    } catch (e) {
-      // Postgres wrote the message ("That passphrase is not right."), so say it
-      // rather than inventing a friendlier one that hides which check failed.
-      toast("Couldn't promote them — " + e.message);
-      if (pass.isConnected) {
-        pass.disabled = go.disabled = false;
-        pass.value = '';
-        pass.focus();
+  if (promote) {
+    const pass = $('#pPass', el);
+    const go = $('#pPromoteGo', el);
+    promote.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      if (!pass.value.trim()) { pass.focus(); return; }
+      pass.disabled = go.disabled = true;
+      try {
+        await promoteToFacilitator(userId, pass.value);
+        close();
+        await loadRoom();
+        renderRoom();
+        toast(`${p.name || 'They'} has the desk now — their work stays on the roster`);
+        openParticipant(userId);
+      } catch (e) {
+        // Postgres wrote the message ("That passphrase is not right."), so say
+        // it rather than inventing a friendlier one that hides which check
+        // failed.
+        toast("Couldn't promote them — " + e.message);
+        if (pass.isConnected) {
+          pass.disabled = go.disabled = false;
+          pass.value = '';
+          pass.focus();
+        }
       }
-    }
-  });
+    });
+  }
 
   const shots = await loadShots(userId);
   // The sheet can be closed while the signed URLs are still coming back, and
