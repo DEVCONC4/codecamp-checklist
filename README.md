@@ -46,6 +46,16 @@ Then [`0006_fix_role_promotion.sql`](supabase/migrations/0006_fix_role_promotion
 which lets you promote your own facilitator account in step 6 — without it that
 promotion silently reverts.
 
+Then [`0007_groups.sql`](supabase/migrations/0007_groups.sql), which adds the
+`groups` table, `profiles.group_id` and the group columns on `v_roster`. It
+drops and recreates `v_roster`, so run it after the ones above rather than
+before them.
+
+Then [`0008_promote_facilitator.sql`](supabase/migrations/0008_promote_facilitator.sql),
+which lets a facilitator hand the desk to a second one from inside the app,
+behind a passphrase. Skip it and promotion stays an SQL Editor job — nothing
+else changes.
+
 Finally, [`0002_realtime.sql`](supabase/migrations/0002_realtime.sql) to make the
 facilitator room update live. It's optional — skip it and the desk falls back to
 its Refresh button, showing "Manual refresh" instead of "Live". It doesn't widen
@@ -144,7 +154,8 @@ node scripts/rls-test.mjs   # two throwaway accounts, proves cross-user isolatio
 asserts that B cannot read, update, insert-as, or delete A's rows; that
 `v_roster` and `v_submissions` leak nothing across users; that B cannot reach
 A's screenshots in storage or mint a signed URL for them; and that a participant
-cannot promote themselves to facilitator. Add the elevated path with:
+cannot promote themselves to facilitator — not by writing the column, and not by
+calling the promotion RPC with the right passphrase. Add the elevated path with:
 
 ```bash
 node scripts/rls-test.mjs --facilitator you@example.com yourpassword
@@ -162,6 +173,11 @@ update public.profiles set role = 'facilitator' where email = 'you@example.com';
 
 Sign out and back in. A **Facilitator** tab appears, and mentor notes start
 showing inline under each step.
+
+That is the bootstrap, and you only do it once. **Every facilitator after the
+first is made from the desk** — open their name on the roster and use *Make them
+a facilitator*. The passphrase is `DEVCON`, and it is checked in Postgres, not in
+the browser. See [Handing over the desk](#handing-over-the-desk).
 
 > **If the role snaps back to `participant`**, you are on a project that never
 > got [`0006_fix_role_promotion.sql`](supabase/migrations/0006_fix_role_promotion.sql).
@@ -193,11 +209,13 @@ src/
 ├── camp.js         all 19 steps — the only file you edit to change the camp
 ├── supabase.js     client + a legible failure when .env is missing
 ├── store.js        the only module that talks to Postgres and Storage
+├── groups.js       make a group, name it, remove it, put somebody in one
+├── promote.js      one call: hand a participant the desk, passphrase and all
 ├── steps.js        the working surface: prose, proofs, stamping
 ├── record.js       My project — review sheet, unlock panel, downloads
 ├── share.js        the share sheet — post text + the documentation file
 ├── doc.js          the two exports (portfolio write-up, progress report)
-├── facilitator.js  the desk — alerts, the room, one participant, Excel export
+├── facilitator.js  the desk — alerts, the room, filters, one participant, Excel
 ├── ui.js           $, esc, toast, the stamp, image downscaling
 └── main.js         auth, tabs, boot
 ```
@@ -347,6 +365,20 @@ first — with Name and Progress a tap away, because alphabetical is the one
 ordering that carries no information and you still sometimes need to find one
 person by name.
 
+**Show** narrows the roster to one of four states: *Not started*, *Working*,
+*Idle*, *Complete*. None of them is stored — every one is derived from the same
+numbers the row already shows, so there is no status column to drift out of step
+with the stamps. *Idle* borrows the quiet column's per-step thresholds exactly,
+which is why the pill and the colouring always agree. The four partition the
+room: someone silent since signup is *Not started* rather than *Idle*, because of
+the two facts that is the more specific one and the row spells out the silence
+next to it either way.
+
+The filters narrow the roster and nothing above it. The tiles, the alerts strip
+and the bar chart answer *where is the room*, and a question about the room
+should not quietly start answering about the six people you have selected —
+"4 complete" is a number that gets read out loud.
+
 **Where the room is stuck.** One bar per step, counting who has stamped it. The
 biggest drop between two consecutive steps gets a marker, *unless* that drop is
 the same step the *Most are at* tile already names: counts only ever fall, so
@@ -373,7 +405,83 @@ The desk is built to be used on a phone, because that is what a facilitator is
 holding while walking the room: every roster row folds into four short lines at
 360px, and the masthead gives up a line so the list gets the screen.
 
-Nothing on the desk writes. It reads the room and says where to walk.
+### Groups
+
+A room run at team tables has a question the per-person roster cannot answer:
+*how is table 3 doing*. So a participant may belong to one group, and a group
+carries a short code — `4KQ2` — alongside its uuid. The uuid is for the join;
+the code is for saying out loud.
+
+The code is generated by the database and never typed. Four characters drawn
+from an alphabet with `I`, `L`, `O`, `0` and `1` removed, because these get read
+across a noisy room. A code somebody chose would collide, and the one thing the
+list has to guarantee is that "table 4KQ2" means one table.
+
+**The facilitator assigns.** Groups are made in the *Groups* sheet on the desk
+and people are put in one from their own sheet, opened by tapping their name.
+Which table someone is sitting at is a fact about the room, not about the work —
+the person who arranged the room is the one who knows it, and a picker at signup
+would only produce a room where three people chose *Group 1* by accident. That
+means `profiles.group_id` is frozen against self-edits the same way `role` is:
+`freeze_group()` in `0007`, mirroring `freeze_role()`, with the same
+`auth.uid() is null` escape hatch for the SQL Editor. `rls-test.mjs` asserts it.
+
+Removing a group empties it. The foreign key is `on delete set null`, so its
+members stay on the roster with no group rather than going with it.
+
+The desk reads the room and says where to walk. It writes exactly one thing —
+which group somebody is in — and those four verbs live in `src/groups.js` so the
+exception stays one small named module. Nothing on the desk touches a
+participant's answers, their stamps or their screenshots.
+
+It hands over one other thing, and only one: the desk itself.
+
+### Handing over the desk
+
+A camp usually has more than one facilitator, and the second one turns up at
+9am, not at setup time. Bootstrapping the first account is an SQL Editor job
+(§6) and that is fine once; making it the only route means a room where the
+person who can answer questions has to go find whoever owns the Supabase
+project. So promotion moved into the desk: open somebody's sheet from the
+roster and *Make them a facilitator*, passphrase `DEVCON`.
+
+**The passphrase is compared in Postgres, not in the browser.** A constant
+checked in client JavaScript is a label on a door — the bundle ships to every
+laptop in the room and anyone can read it out of devtools and call PostgREST by
+hand. So the word lives in `promotion_passphrase()` and the check lives in
+`promote_to_facilitator()`, a `security definer` function that asks *who is
+this* before it asks *what did they type*. A participant who knows the word is
+turned away before it is ever compared, and `rls-test.mjs` asserts exactly that.
+
+For the passphrase to mean anything, that function has to be the only way in.
+So `0008` narrows `freeze_role()` a third time: 0001 froze the column against
+everyone but a facilitator, 0006 swapped that for *is a real user making this
+change* so the SQL Editor could bootstrap, and 0008 narrows the signed-in case
+from "is a facilitator" to "came through the RPC" — which the function signals
+with a transaction-local `set_config`. A facilitator writing
+`update profiles set role = 'facilitator'` straight at PostgREST now gets the
+same silent revert a participant gets. `auth.uid() is null` is still the escape
+hatch, so §6 works as written.
+
+Be clear-eyed about what this buys. Only facilitators can reach the RPC at all —
+RLS and `is_facilitator()` are the security boundary, and they were already
+there. The passphrase is a second factor in front of the one irreversible thing
+on the desk, and a deliberate pause before handing someone every participant's
+answers and screenshots. It is not a secret: it is the event's own name, it is
+in this file, and by lunchtime it will have been said out loud. Treat it as the
+lock on a stationery cupboard, not on a safe.
+
+Promotion is one-way from the app. Demotion is a single statement in the SQL
+Editor, where `auth.uid()` is null and the trigger stands aside:
+
+```sql
+update public.profiles set role = 'participant' where email = 'them@example.com';
+```
+
+A promoted account gets the desk on the session it is already holding — no
+sign-out and back in — because `is_facilitator()` reads the table rather than
+the JWT. They also leave the roster the moment it refreshes; the desk lists the
+room, and they are no longer in it.
 
 ### Sharing
 
@@ -558,3 +666,9 @@ operations, **the app wins** — this is a companion to it, not a replacement.
    setting. Turn it off under **Authentication → Sign In / Providers → Email**,
    then run `0004_confirm_camp_users.sql` for the accounts already stranded.
    The app checks `/auth/v1/settings` at boot and warns before anyone tries.
+7. **The Excel export ignores groups and filters.** `exportXlsx()` still walks
+   the whole roster and its 17 columns carry no group, so a workbook exported
+   while the desk is narrowed to one table is nonetheless the entire room. That
+   is the safer of the two surprises — an export that silently dropped two
+   thirds of the camp would be worse — but a *Group* column is one entry in the
+   header array and one `p.group_code` in the row, if the day wants it.

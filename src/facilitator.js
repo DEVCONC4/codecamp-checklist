@@ -9,18 +9,31 @@
 //   where is the room stuck            the per-step chart
 //   what is this one person looking at  tap their name
 //
-// Nothing here writes. The desk reads the room and says where to walk.
+// The desk reads the room and says where to walk. It writes exactly one thing:
+// which group somebody is in. That is a fact about the room rather than about
+// the work — only the person who arranged the tables knows it, and there is
+// nowhere else for it to come from. Those four verbs live in groups.js so the
+// exception stays visible; nothing in this file touches a participant's answers.
+//
+// It hands one other thing over: the desk itself, when a second facilitator
+// turns up. That is behind a passphrase the database checks, not this file —
+// promote.js posts it, 0008 compares it.
 import { supabase } from './supabase.js';
 import { CAMP, STEPS, REQ, TOTAL, stepById, stepNumber } from './camp.js';
 import { signedUrls } from './store.js';
+import { listGroups, createGroup, renameGroup, deleteGroup, assignGroup } from './groups.js';
+import { promoteToFacilitator } from './promote.js';
 import { $, $$, esc, toast, download, slug, zoom, stampHTML } from './ui.js';
 
 let roster = [];
 let subs = [];
+let groups = [];         // groups rows, ordered by code
 let answer = new Map();  // `user|step|field` -> value
 let stamped = new Set(); // `user|step` for a stamped step
 let stampAt = new Map(); // `user|step` -> when it was stamped
 let sort = 'need';       // need | name | progress
+let status = 'all';      // all | new | live | idle | done
+let group = 'all';       // all | '' (nobody's group) | a group id
 
 const shotCache = new Map();
 
@@ -94,11 +107,12 @@ export function subscribeRoom(onData, onStatus) {
     .channel('camp-room')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'progress' }, nudge)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, nudge)
-    .subscribe((status) => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'groups' }, nudge)
+    .subscribe((state) => {
       // Realtime may be disabled for these tables, or blocked by the network.
       // Either way the desk still works — it just needs the Refresh button.
-      if (status === 'SUBSCRIBED') live = 'live';
-      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') live = 'manual';
+      if (state === 'SUBSCRIBED') live = 'live';
+      else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') live = 'manual';
       onStatus?.();
     });
 
@@ -120,19 +134,27 @@ export function unsubscribeRoom() {
 }
 
 export async function loadRoom() {
-  const [r, s, g] = await Promise.all([
+  const [r, s, g, gr] = await Promise.all([
     supabase.from('v_roster').select('*').order('name'),
     supabase.from('v_submissions').select('*'),
     // Straight off the table: the roster view can only count stamps, and the
     // desk needs to know *which* steps they were. RLS hands the whole room to
     // a facilitator and one row to everyone else.
     supabase.from('progress').select('user_id, step_id, done, done_at'),
+    // The full list, not just the groups somebody is in — an empty group still
+    // has to be pickable, or it could never be filled.
+    listGroups(),
   ]);
   if (r.error) throw r.error;
   if (s.error) throw s.error;
   if (g.error) throw g.error;
 
+  groups = gr;
   roster = (r.data || []).filter((p) => p.role !== 'facilitator');
+
+  // A group can be deleted while its filter is the one on screen. Falling back
+  // to everyone is better than an empty roster with no visible cause.
+  if (group !== 'all' && group !== '' && !groups.some((x) => x.id === group)) group = 'all';
   const ids = new Set(roster.map((p) => p.id));
 
   // Staff answers are test data. They are already out of the roster; keep them
@@ -233,6 +255,31 @@ const SORTS = {
 
 const SORT_LABEL = { need: 'Needs attention', name: 'Name', progress: 'Progress' };
 
+// ── the four states somebody can be in ───────────────────────────────
+// Derived, not stored — there is no status column and there should not be one,
+// because every one of these is already visible in a row and would only drift
+// if it were written down. Idle borrows the same per-step budget thresholds as
+// the coloured Quiet-for column, so the pill and the column agree by
+// construction rather than by coincidence.
+//
+// The four real buckets partition the roster exactly: idleLevel() returns ''
+// once somebody is complete, and idle needs at least one stamp. Someone who
+// signed up and has said nothing for forty minutes lands in Not started rather
+// than Idle — of the two facts that is the more specific one, and the row
+// already spells out the silence next to it.
+const STATUS = {
+  all:  { label: 'Everyone',    is: () => true },
+  new:  { label: 'Not started', is: (p) => doneCount(p.id) === 0 },
+  live: { label: 'Working',     is: (p) => { const n = doneCount(p.id); return n > 0 && n < TOTAL && !idleLevel(p); } },
+  idle: { label: 'Idle',        is: (p) => doneCount(p.id) > 0 && !!idleLevel(p) },
+  done: { label: 'Complete',    is: (p) => doneCount(p.id) >= TOTAL },
+};
+
+const inGroup = (p) => group === 'all' || (group === '' ? !p.group_id : p.group_id === group);
+const filtered = () => (status === 'all' && group === 'all' ? roster : roster.filter((p) => (STATUS[status] || STATUS.all).is(p) && inGroup(p)));
+
+const groupLabel = (g) => (g.name ? `${g.code} · ${g.name}` : g.code);
+
 function alertsHTML() {
   const hits = ALERTS
     .map((a) => ({ a, who: roster.filter((p) => field(p.id, a.step, a.key) === a.is) }))
@@ -309,6 +356,13 @@ export function renderRoom() {
     return;
   }
 
+  // The filters narrow the roster and nothing above it. The tiles, the alerts
+  // strip and the wall chart answer "where is the room", and a question about
+  // the room should not quietly start answering about six of its people —
+  // "4 complete" meaning four out of the group you happen to have selected is
+  // the kind of number that gets read out loud and is then wrong.
+  const shown = filtered();
+
   const complete = roster.filter((p) => doneCount(p.id) >= TOTAL).length;
   const started = roster.filter((p) => doneCount(p.id) > 0).length;
   const avg = Math.round(roster.reduce((a, p) => a + doneCount(p.id), 0) / roster.length);
@@ -340,7 +394,20 @@ export function renderRoom() {
     </dl>
     ${wallHTML(worst?.[0])}
     <div class="rosterhead">
-      <span class="eyebrow">${roster.length} in the room</span>
+      <span class="eyebrow">${shown.length === roster.length ? `${roster.length} in the room` : `${shown.length} of ${roster.length} in the room`}</span>
+      <span class="sp"></span>
+      <span class="eyebrow">Group</span>
+      <select class="gpick" id="groupPick" aria-label="Show one group">
+        <option value="all"${group === 'all' ? ' selected' : ''}>All groups</option>
+        <option value=""${group === '' ? ' selected' : ''}>No group</option>
+        ${groups.map((g) => `<option value="${esc(g.id)}"${group === g.id ? ' selected' : ''}>${esc(groupLabel(g))}</option>`).join('')}
+      </select>
+    </div>
+    <div class="rosterhead tight">
+      <span class="eyebrow">Show</span>
+      <div class="segs" role="group" aria-label="Filter the roster by status">${Object.keys(STATUS)
+        .map((k) => `<button type="button" class="seg" data-status="${k}" aria-pressed="${k === status}">${STATUS[k].label}</button>`)
+        .join('')}</div>
       <span class="sp"></span>
       <span class="eyebrow">Sort</span>
       <div class="segs" role="group" aria-label="Sort the roster">${Object.keys(SORTS)
@@ -352,6 +419,7 @@ export function renderRoom() {
       <caption>Tap anyone to see their answers and screenshots.</caption>
       <thead><tr>
         ${th('Name', 'c-name', 'name')}
+        ${th('Group', 'c-group')}
         ${th('OS', 'c-os')}
         ${th('Progress', 'c-bar', 'progress')}
         ${th('Steps', 'c-num')}
@@ -359,16 +427,36 @@ export function renderRoom() {
         ${th('Flags', 'c-flags')}
         ${th('Quiet for', 'c-quiet', 'need')}
       </tr></thead>
-      <tbody>${[...roster].sort(SORTS[sort] || SORTS.need).map(rowHTML).join('')}</tbody>
+      <tbody>${
+        shown.length
+          ? [...shown].sort(SORTS[sort] || SORTS.need).map(rowHTML).join('')
+          : `<tr class="rnone"><td colspan="8">Nobody in the room matches that.
+               <button type="button" class="btn btn-ghost btn-sm" data-clear>Show everyone</button></td></tr>`
+      }</tbody>
     </table>
     </div>`;
 
   $$('#roomOut [data-sort]').forEach((b) =>
     b.addEventListener('click', () => { sort = b.dataset.sort; renderRoom(); }),
   );
+  $$('#roomOut [data-status]').forEach((b) =>
+    b.addEventListener('click', () => { status = b.dataset.status; renderRoom(); }),
+  );
+  $('#groupPick').addEventListener('change', (ev) => { group = ev.target.value; renderRoom(); });
+  $$('#roomOut [data-clear]').forEach((b) =>
+    b.addEventListener('click', () => { status = 'all'; group = 'all'; renderRoom(); }),
+  );
   $$('#roomOut [data-user]').forEach((b) =>
     b.addEventListener('click', () => openParticipant(b.dataset.user)),
   );
+}
+
+// The code carries and the name follows it, because the code is what gets said
+// out loud and what stays put when a group is renamed. An unassigned row says
+// so quietly rather than leaving a hole the eye reads as missing data.
+function groupCell(p) {
+  if (!p.group_id) return '<span class="nogroup">—</span>';
+  return `<span class="gtag">${esc(p.group_code || '')}</span>${p.group_name ? `<span class="gname">${esc(p.group_name)}</span>` : ''}`;
 }
 
 function th(label, cls, sortedBy = '') {
@@ -393,6 +481,7 @@ function rowHTML(p) {
   // button bubbles to the row, so the handler is bound once either way.
   return `<tr class="rline${hot ? ' hot' : ''}" data-user="${esc(p.id)}">
     <th scope="row" class="c-name"><button type="button" class="rowbtn">${esc(p.name || '(no name)')}</button></th>
+    <td class="c-group" data-label="Group">${groupCell(p)}</td>
     <td class="c-os" data-label="OS">${esc(p.os || '')}</td>
     <td class="c-bar" data-label="Progress"><span class="minirail">${pct ? `<i style="width:${pct}%"></i>` : ''}</span></td>
     <td class="c-num" data-label="Steps">${n}<span class="of">/${TOTAL}</span></td>
@@ -448,6 +537,22 @@ export async function openParticipant(userId) {
           .map((f) => `<div class="alert ${f.level}"><strong>${esc(f.title)}</strong><p>${esc(f.what)}</p></div>`)
           .join('')}</div>`
       : ''}
+    <div class="passign">
+      <label class="eyebrow" for="pGroup">Group</label>
+      <select class="gpick" id="pGroup">
+        <option value=""${p.group_id ? '' : ' selected'}>No group</option>
+        ${groups.map((g) => `<option value="${esc(g.id)}"${p.group_id === g.id ? ' selected' : ''}>${esc(groupLabel(g))}</option>`).join('')}
+      </select>
+    </div>
+    <form class="ppromote" id="pPromote" autocomplete="off">
+      <label class="eyebrow" for="pPass">Make them a facilitator</label>
+      <div class="prow">
+        <input type="password" id="pPass" placeholder="Passphrase" autocomplete="off"
+               aria-describedby="pPromoteNote">
+        <button type="submit" class="btn btn-sm" id="pPromoteGo">Promote</button>
+      </div>
+      <p class="pnote" id="pPromoteNote">Hands over the desk: every participant's answers and screenshots, and the power to do this again. They leave the roster.</p>
+    </form>
     ${links.length
       ? `<div class="plinks">${links
           .map(([k, v]) => {
@@ -475,6 +580,63 @@ export async function openParticipant(userId) {
   el.addEventListener('click', (ev) => { if (ev.target === el) close(); });
   $('#pClose', el).addEventListener('click', close);
   $('#pDone', el).addEventListener('click', close);
+
+  // The everyday write on the desk. Disabled while it is in flight so a fast
+  // second change cannot race the first, and the roster underneath is rebuilt
+  // from the database rather than patched — the group's code and name live on
+  // the view, not on the option that was picked.
+  const pick = $('#pGroup', el);
+  pick.addEventListener('change', async () => {
+    const was = p.group_id || '';
+    pick.disabled = true;
+    try {
+      await assignGroup(userId, pick.value);
+      await loadRoom();
+      renderRoom();
+      const g = groups.find((x) => x.id === pick.value);
+      toast(g ? `${p.name || 'They'} → ${groupLabel(g)}` : `${p.name || 'They'} → no group`);
+    } catch (e) {
+      pick.value = was;
+      toast("Couldn't change their group — " + e.message);
+    } finally {
+      // The sheet can be closed mid-write; re-enabling a detached node is
+      // harmless, but there is nothing to re-enable if it went with it.
+      if (pick.isConnected) pick.disabled = false;
+    }
+  });
+
+  // The rare one. No confirm() in front of it — typing a passphrase is already
+  // the deliberate act, and a dialog on top of it would only teach people to
+  // dismiss dialogs. The word is not checked here; it goes to the database,
+  // which is the only place a check would mean anything (see promote.js).
+  //
+  // On success they are staff, and loadRoom() drops them from the roster —
+  // facilitators are filtered out of it — so the sheet is closed rather than
+  // left open on somebody who is no longer there.
+  const promote = $('#pPromote', el);
+  const pass = $('#pPass', el);
+  const go = $('#pPromoteGo', el);
+  promote.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!pass.value.trim()) { pass.focus(); return; }
+    pass.disabled = go.disabled = true;
+    try {
+      await promoteToFacilitator(userId, pass.value);
+      close();
+      await loadRoom();
+      renderRoom();
+      toast(`${p.name || 'They'} is a facilitator now — off the roster, on the desk`);
+    } catch (e) {
+      // Postgres wrote the message ("That passphrase is not right."), so say it
+      // rather than inventing a friendlier one that hides which check failed.
+      toast("Couldn't promote them — " + e.message);
+      if (pass.isConnected) {
+        pass.disabled = go.disabled = false;
+        pass.value = '';
+        pass.focus();
+      }
+    }
+  });
 
   const shots = await loadShots(userId);
   // The sheet can be closed while the signed URLs are still coming back, and
@@ -513,6 +675,134 @@ export async function openParticipant(userId) {
   $$('#pBody [data-zoom]', el).forEach((img) =>
     img.addEventListener('click', () => zoom(img.dataset.zoom)),
   );
+}
+
+// ── the group list ───────────────────────────────────────────────────
+// Make the tables, then put people at them. Kept off the roster on purpose:
+// creating and deleting groups is a two-minute job at the start of the day,
+// and it should not sit permanently beside the thing the desk is actually for.
+//
+// The code is generated by the database and shown, never typed. A code someone
+// chose would collide, and the one thing this list has to guarantee is that
+// "table 4KQ2" means one table.
+
+export async function openGroups() {
+  const el = document.createElement('div');
+  el.className = 'sheet';
+  el.innerHTML = `<div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <button class="sheet-x" id="gClose" title="Close" aria-label="Close">×</button>
+    <span class="eyebrow">Facilitator only</span>
+    <h3 id="gTitle">Groups</h3>
+    <p class="sheet-lede">Each group gets a short code the moment you make it. Put people in one from their name on the roster.</p>
+    <div id="gBody"></div>
+    <div class="gnew">
+      <input type="text" id="gName" placeholder="Name the group — Table 1, Team Mango…" autocomplete="off">
+      <button class="btn btn-primary btn-sm" id="gAdd">Add group</button>
+    </div>
+    <div class="sheet-foot"><span class="sp"></span><button class="btn btn-ghost btn-sm" id="gDone">Close</button></div>
+  </div>`;
+
+  document.body.appendChild(el);
+
+  const close = () => {
+    el.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  function onKey(ev) {
+    if (ev.key === 'Escape') close();
+  }
+  document.addEventListener('keydown', onKey);
+  el.addEventListener('click', (ev) => { if (ev.target === el) close(); });
+  $('#gClose', el).addEventListener('click', close);
+  $('#gDone', el).addEventListener('click', close);
+
+  // Every mutation goes back through loadRoom() before anything is redrawn, so
+  // the sheet and the desk behind it are two views of one fetch rather than two
+  // guesses that have to be kept in step.
+  async function sync() {
+    await loadRoom();
+    renderRoom();
+    if (el.isConnected) draw();
+  }
+
+  function draw() {
+    const body = $('#gBody', el);
+    if (!groups.length) {
+      body.innerHTML = '<p class="nowt">No groups yet. Add the first one below.</p>';
+      return;
+    }
+
+    body.innerHTML = `<div class="glist">${groups
+      .map((g) => {
+        const n = roster.filter((p) => p.group_id === g.id).length;
+        return `<div class="grow">
+          <span class="gtag">${esc(g.code)}</span>
+          <input type="text" class="gedit" value="${esc(g.name)}" data-rename="${esc(g.id)}"
+                 placeholder="Unnamed" aria-label="Name of group ${esc(g.code)}">
+          <span class="gcount">${n} ${n === 1 ? 'person' : 'people'}</span>
+          <button type="button" class="btn btn-ghost btn-sm" data-drop-group="${esc(g.id)}">Remove</button>
+        </div>`;
+      })
+      .join('')}</div>`;
+
+    // Rename on blur rather than per-keystroke: this is a text field somebody
+    // is typing into, and a write per character would fight the refetch.
+    $$('#gBody [data-rename]', el).forEach((input) => {
+      const was = input.value;
+      input.addEventListener('blur', async () => {
+        if (input.value.trim() === was.trim()) return;
+        input.disabled = true;
+        try {
+          await renameGroup(input.dataset.rename, input.value);
+          await sync();
+        } catch (e) {
+          input.value = was;
+          input.disabled = false;
+          toast("Couldn't rename that group — " + e.message);
+        }
+      });
+      input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') input.blur(); });
+    });
+
+    $$('#gBody [data-drop-group]', el).forEach((b) => {
+      b.addEventListener('click', async () => {
+        const g = groups.find((x) => x.id === b.dataset.dropGroup);
+        const n = roster.filter((p) => p.group_id === b.dataset.dropGroup).length;
+        // Nobody is deleted with the group — the foreign key empties them. Say
+        // so, because "remove" next to a person count reads worse than it is.
+        if (n && !confirm(`Remove ${groupLabel(g)}? The ${n} ${n === 1 ? 'person' : 'people'} in it stay on the roster with no group.`)) return;
+        b.disabled = true;
+        try {
+          await deleteGroup(b.dataset.dropGroup);
+          await sync();
+        } catch (e) {
+          b.disabled = false;
+          toast("Couldn't remove that group — " + e.message);
+        }
+      });
+    });
+  }
+
+  const name = $('#gName', el);
+  const add = $('#gAdd', el);
+  async function submit() {
+    add.disabled = true;
+    try {
+      const g = await createGroup(name.value);
+      name.value = '';
+      await sync();
+      toast(`${groupLabel(g)} added`);
+    } catch (e) {
+      toast("Couldn't add that group — " + e.message);
+    } finally {
+      if (add.isConnected) add.disabled = false;
+      if (name.isConnected) name.focus();
+    }
+  }
+  add.addEventListener('click', submit);
+  name.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submit(); });
+
+  draw();
 }
 
 // ── spreadsheet ──────────────────────────────────────────────────────

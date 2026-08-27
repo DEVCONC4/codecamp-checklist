@@ -137,6 +137,20 @@ console.log(`A = ${A.email}\nB = ${B.email}\n`);
   const { data } = await B.sb.from('profiles').update({ name: 'Renamed By Bob' }).eq('id', A.id).select();
   check('B cannot rename A', (data?.length ?? 0) === 0, `${data?.length ?? 0} rows changed`);
 }
+{
+  const { error } = await B.sb.from('groups').insert({ name: 'Bob\'s Own Table' });
+  check('B cannot create a group', !!error, error ? error.code : 'INSERT SUCCEEDED');
+}
+{
+  // The promotion passphrase is not a secret — it ships in the migration and
+  // gets said out loud at a camp. That is exactly why knowing it must not be
+  // enough: the RPC checks who is asking before it ever checks the word.
+  const { error } = await B.sb.rpc('promote_to_facilitator', { target: B.id, passphrase: 'DEVCON' });
+  const { data } = await B.sb.from('profiles').select('role').eq('id', B.id).maybeSingle();
+  check('B cannot promote themselves even with the right passphrase',
+    !!error && data?.role === 'participant',
+    error ? 'rejected: ' + error.code : 'role is now: ' + data?.role);
+}
 
 // ── storage ───────────────────────────────────────────────────────────
 const shotPath = `${A.id}/p1/${crypto.randomUUID()}.jpg`;
@@ -191,6 +205,77 @@ if (fi > -1) {
 
     const steps = (roster || []).find((r) => r.id === A.id)?.steps_done;
     check('v_roster counts stamped steps correctly', Number(steps) === 2, `steps_done=${steps}`);
+
+    // ── groups ────────────────────────────────────────────────────────
+    // Needs a real group to move into: pointing group_id at a made-up uuid
+    // would be stopped by the foreign key, which proves nothing about the
+    // trigger. So the facilitator makes one, and B tries to walk into it.
+    const { data: g, error: gErr } = await F.from('groups')
+      .insert({ name: 'RLS test table' }).select().single();
+    check('Facilitator can create a group', !gErr && !!g?.id, gErr?.message);
+
+    if (g?.id) {
+      check('A new group gets a code from the database', /^[A-Z0-9]{4,6}$/.test(g.code || ''), `code=${g.code}`);
+
+      const { data: moved } = await F.from('profiles')
+        .update({ group_id: g.id }).eq('id', A.id).select();
+      check('Facilitator can put a participant in a group', (moved?.length ?? 0) === 1, `${moved?.length ?? 0} rows changed`);
+
+      const { data: withGroup } = await F.from('v_roster').select('group_code, group_name').eq('id', A.id).maybeSingle();
+      check('v_roster carries the group code and name', withGroup?.group_code === g.code, JSON.stringify(withGroup));
+
+      await B.sb.from('profiles').update({ group_id: g.id }).eq('id', B.id);
+      const { data: bee } = await B.sb.from('profiles').select('group_id').eq('id', B.id).maybeSingle();
+      check('B cannot move themselves into a group (freeze_group trigger)',
+        !bee?.group_id, 'group_id is now: ' + bee?.group_id);
+
+      const { error: renameErr } = await B.sb.from('groups').update({ name: 'Bob was here' }).eq('id', g.id);
+      const { data: still } = await F.from('groups').select('name').eq('id', g.id).maybeSingle();
+      check('B cannot rename a group', still?.name === 'RLS test table',
+        renameErr ? 'rejected: ' + renameErr.code : 'name is now: ' + still?.name);
+
+      // Deleting a group must empty it, not delete the people in it.
+      await F.from('groups').delete().eq('id', g.id);
+      const { data: after } = await F.from('v_roster').select('id, group_id').eq('id', A.id).maybeSingle();
+      check('Deleting a group leaves its members on the roster',
+        after?.id === A.id && !after?.group_id, JSON.stringify(after));
+    }
+
+    // ── promotion ─────────────────────────────────────────────────────
+    // Last, because it turns B into staff and every assertion above needs B to
+    // be an ordinary participant. The cleanup at the end takes the promoted
+    // account with it.
+    {
+      const { error: wrong } = await F.rpc('promote_to_facilitator', { target: B.id, passphrase: 'hunter2' });
+      const { data: still } = await F.from('profiles').select('role').eq('id', B.id).maybeSingle();
+      check('The wrong passphrase promotes nobody', !!wrong && still?.role === 'participant',
+        wrong ? 'rejected: ' + wrong.code : 'role is now: ' + still?.role);
+    }
+    {
+      // The whole point of tightening freeze_role in 0008: a facilitator who
+      // skips the RPC and writes the column straight at PostgREST gets the
+      // same silent revert a participant gets. Otherwise the passphrase is
+      // walkable-around by exactly the people it is meant to slow down.
+      await F.from('profiles').update({ role: 'facilitator' }).eq('id', B.id);
+      const { data } = await F.from('profiles').select('role').eq('id', B.id).maybeSingle();
+      check('A facilitator cannot promote by direct UPDATE either (freeze_role trigger)',
+        data?.role === 'participant', 'role is now: ' + data?.role);
+    }
+    {
+      // Lower case with stray spaces on purpose — this gets typed into a
+      // password field at the front of a room, and the function trims and
+      // upper-cases before it compares.
+      const { error: pErr } = await F.rpc('promote_to_facilitator', { target: B.id, passphrase: ' devcon ' });
+      const { data } = await F.from('profiles').select('role').eq('id', B.id).maybeSingle();
+      check('Facilitator + passphrase promotes, case and spacing forgiven',
+        !pErr && data?.role === 'facilitator', pErr ? pErr.message : 'role is now: ' + data?.role);
+
+      // is_facilitator() reads the table, not the JWT, so the new facilitator
+      // has the desk on the session they are already holding.
+      const { data: room } = await B.sb.from('v_roster').select('id');
+      check('The newly promoted account sees the room without signing in again',
+        (room?.length ?? 0) >= 2, `${room?.length ?? 0} rows`);
+    }
   }
 } else {
   console.log('\n(skipping facilitator checks — pass --facilitator <email> <password> to include them)');

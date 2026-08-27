@@ -5,7 +5,7 @@ import { store, loadProfile, loadAll, flush, clearStore, isFacilitator } from '.
 import { $, $$, toast, pill } from './ui.js';
 import { renderAll, wireGlobalKeys } from './steps.js';
 import { renderRecord } from './record.js';
-import { loadRoom, renderRoom, exportXlsx, subscribeRoom, unsubscribeRoom } from './facilitator.js';
+import { loadRoom, renderRoom, exportXlsx, openGroups, subscribeRoom, unsubscribeRoom } from './facilitator.js';
 
 // ── views ────────────────────────────────────────────────────────────
 
@@ -275,6 +275,7 @@ async function boot() {
   );
 
   $$('.tab').forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
+  $('#groupsBtn').addEventListener('click', openGroups);
   $('#refreshRoom').addEventListener('click', refreshRoom);
   $('#xlsxBtn').addEventListener('click', exportXlsx);
   $$('[data-signout]').forEach((b) => b.addEventListener('click', signOut));

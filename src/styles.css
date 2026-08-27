@@ -484,9 +484,18 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
 .seg:hover{color:var(--ink)}
 .seg[aria-pressed="true"]{background:var(--stamp);color:#fff}
 .roster thead th[aria-sort]{color:var(--stamp)}
+/* Status is a fixed five, so it gets pills. Groups are however many the day
+   needs, so they get a select — a pill group that grows without a ceiling
+   would eat the head. It borrows the pill geometry so the strip still reads
+   as one row of controls rather than a form control that wandered in. */
+.rosterhead.tight{margin-top:10px}
+.gpick{font-family:var(--display);font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink);background:var(--panel);border:0;border-radius:999px;padding:9px 14px;cursor:pointer;max-width:230px}
+.gpick:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
 
 /* roster columns */
-.roster .c-name{width:23%}
+.roster .c-name{width:19%}
+.roster .c-group{width:130px}
 .roster .c-os{width:76px}
 .roster .c-bar{width:132px}
 .roster .c-num{width:66px;text-align:right}
@@ -522,6 +531,20 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
   padding:4px 8px;border-radius:999px;background:var(--warn-tint);color:var(--warn);white-space:nowrap}
 .rflag.bad{background:var(--flag-tint);color:var(--flag)}
 .rflag+.rflag{margin-left:4px}
+
+/* The group code. Mono and tabular so a column of them reads down and two
+   codes can be told apart at a glance — the same reason the step counts are
+   mono. Sized off .rflag so the two chip columns rhyme. */
+.gtag{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.04em;
+  font-variant-numeric:tabular-nums;padding:4px 8px;border-radius:999px;
+  background:var(--stamp-tint);color:var(--stamp);white-space:nowrap}
+.roster tbody .gname{display:block;font-size:12px;color:var(--ink-faint);margin-top:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nogroup{color:var(--ink-faint)}
+/* Nobody matched the filter. A row rather than a banner, so the table keeps
+   its shape and the way out is inside the thing that emptied. */
+.rnone td{color:var(--ink-soft);font-size:14.5px}
+.rnone .btn{margin-left:10px}
 /* Track dark enough to read as an empty bar on white. The fill is omitted
    entirely at zero, so min-width can rescue 1/19 from rendering as a stray dot
    without giving a not-started row a purple pip. */
@@ -551,6 +574,35 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
 .plinks a:hover{background:var(--stamp-tint)}
 .plinks .dead{color:var(--ink-faint)}
 .plinks .eyebrow{display:block;margin-bottom:4px}
+/* Which group they are in, on the one screen where it can be changed. Above
+   the links because it is the only control in the sheet — everything below it
+   is a read. */
+.passign{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border-radius:14px;padding:12px 15px;margin:18px 0 4px}
+.passign .gpick{background:var(--paper);max-width:none;flex:1;min-width:170px}
+.passign select:disabled{opacity:.55;cursor:default}
+
+/* promoting someone — a quieter block than the group picker on purpose: it is
+   used once a camp, not once a table, and should not read as the next thing
+   to do after choosing a group */
+.ppromote{background:var(--panel);border-radius:14px;padding:12px 15px;margin:8px 0 4px}
+.ppromote .eyebrow{display:block;margin-bottom:8px}
+.ppromote .prow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ppromote input{flex:1;min-width:150px;font-size:15px;letter-spacing:.06em;color:var(--ink);
+  background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:10px 13px}
+.ppromote input:focus-visible{outline:none;border-color:var(--stamp)}
+.ppromote input:disabled,.ppromote button:disabled{opacity:.55;cursor:default}
+.pnote{font-size:12px;line-height:1.45;color:var(--ink-faint);margin:9px 0 0}
+
+/* the group list */
+.glist{display:grid;gap:8px;margin-bottom:20px}
+.grow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);border-radius:14px;padding:11px 14px}
+.gedit{flex:1;min-width:150px;font-family:var(--display);font-weight:800;font-size:14.5px;color:var(--ink);
+  background:var(--paper);border:0;border-radius:10px;padding:8px 11px}
+.gedit:disabled{opacity:.55}
+.gcount{font-size:12.5px;color:var(--ink-faint);white-space:nowrap}
+.gnew{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:18px;border-top:1px solid var(--rule)}
+.gnew input{flex:1;min-width:190px;font-size:15px;background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:11px 14px}
+.gnew input:focus-visible{outline:none;border-color:var(--stamp)}
 
 .empty{border:2px dashed var(--rule);border-radius:20px;padding:46px 24px;text-align:center;color:var(--ink-soft);margin-top:24px;
   background-image:var(--dots-ink);background-position:center;background-repeat:no-repeat}
@@ -651,9 +703,13 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
      else becomes a label/value pair. */
   .tablewrap{border-radius:14px}
   .rosterhead{margin-top:24px;gap:8px}
+  .rosterhead.tight{margin-top:8px}
   .rosterhead .sp{display:none}
-  .segs{width:100%}
-  .seg{flex:1;padding:8px 4px;letter-spacing:.04em}
+  /* Five status pills across 360px is four letters each. Let them wrap to a
+     second line instead, and give each one a floor to wrap at. */
+  .segs{width:100%;flex-wrap:wrap}
+  .seg{flex:1 1 88px;padding:8px 6px;letter-spacing:.04em}
+  .gpick{width:100%;max-width:none;text-align:center}
   .roster{display:block;table-layout:auto}
   .roster caption{padding:14px 15px 0}
   .roster thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -668,6 +724,15 @@ h1,h2,h3{font-family:var(--display);font-weight:800;letter-spacing:-.02em;line-h
   .roster .rowbtn{font-size:16.5px}
   .roster .c-bar .minirail{flex:1}
   .roster tbody td.c-flags:empty{display:none}
+  /* The no-matches row is not a person and carries no data-label, so it must
+     not get the empty label gutter every other cell does. */
+  .roster tbody tr.rnone{display:block}
+  .roster tbody tr.rnone td{display:block;text-align:center;padding:8px 0}
+  .roster tbody tr.rnone td::before{content:none}
+  .rnone .btn{display:block;margin:10px auto 0}
+  /* The stacked card puts label and value on one line, so the group's name
+     belongs beside its code rather than under it. */
+  .roster tbody .gname{display:inline;margin:0 0 0 8px}
   /* Both of these say nothing on a finished row, and an empty label/value pair
      reads as missing data rather than as nothing to report. */
   .roster tbody td.c-quiet:empty{display:none}
