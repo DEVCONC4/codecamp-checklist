@@ -758,7 +758,7 @@ export async function openGroups() {
     body.innerHTML = `<div class="glist">${groups
       .map((g) => {
         const n = roster.filter((p) => p.group_id === g.id).length;
-        return `<div class="grow">
+        return `<div class="gitem">
           <span class="gtag">${esc(g.code)}</span>
           <input type="text" class="gedit" value="${esc(g.name)}" data-rename="${esc(g.id)}"
                  placeholder="Unnamed" aria-label="Name of group ${esc(g.code)}">
