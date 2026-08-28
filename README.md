@@ -534,8 +534,11 @@ left, with their progress report downloadable either way.
 
 Click, drag-drop, or **Ctrl/Cmd+V anywhere on the step**. Paste is the important
 one — it removes the save-file-then-browse detour, the single biggest friction
-reduction in the app. Images are downscaled to 1280px at JPEG 0.72 before upload,
-then stored under `<user-id>/<step-id>/<uuid>.jpg` in the private `proofs`
+reduction in the app. Images are downscaled to 1280px at quality 0.72 and
+encoded as WebP before upload — about 40% smaller than the JPEG it replaced, on
+both the bucket and the desk view's thumbnail refetches — falling back to JPEG
+on a browser whose canvas can't write WebP. They are stored under
+`<user-id>/<step-id>/<uuid>.<webp|jpg>` in the private `proofs`
 bucket. The first path segment is the owner, which is what every storage policy
 keys off. Paste is refused on a step that has not opened yet — see *Stamping, and
 the order steps open in*.

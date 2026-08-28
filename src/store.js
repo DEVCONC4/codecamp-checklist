@@ -2,7 +2,7 @@
 // from the in-memory mirror this keeps, so rendering stays synchronous.
 import { supabase, PROOF_BUCKET } from './supabase.js';
 import { STEPS, REQ, TOTAL } from './camp.js';
-import { shrink, pill, saved, toast } from './ui.js';
+import { shrink, EXT, pill, saved, toast } from './ui.js';
 
 export const store = {
   profile: null,
@@ -150,8 +150,12 @@ export async function addScreenshots(stepId, fieldKey, files) {
   for (const f of imgs) {
     const small = await shrink(f);
     if (!small) continue;
-    const path = `${store.profile.id}/${stepId}/${crypto.randomUUID()}.jpg`;
-    const up = await supabase.storage.from(PROOF_BUCKET).upload(path, small, { contentType: 'image/jpeg' });
+    // Extension and content type both come from the blob, not from the format
+    // shrink() was asked for: it falls back to JPEG where WebP can't be encoded,
+    // and an object mislabelled at upload stays mislabelled for the life of the
+    // camp — every signed URL after it would serve the wrong type.
+    const path = `${store.profile.id}/${stepId}/${crypto.randomUUID()}.${EXT[small.type] || 'jpg'}`;
+    const up = await supabase.storage.from(PROOF_BUCKET).upload(path, small, { contentType: small.type });
     if (up.error) { toast('Upload failed: ' + up.error.message); continue; }
     const ins = await supabase
       .from('screenshots')
